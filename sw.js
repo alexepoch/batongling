@@ -1,4 +1,4 @@
-const CACHE_NAME = 'secretary-v4';
+const CACHE_NAME = 'secretary-v5';
 const urlsToCache = [
   '/',
   '/index.html',

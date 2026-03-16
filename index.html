@@ -2548,11 +2548,16 @@ function formatDate(dateStr) {
 // ===== SERVICE WORKER =====
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').then(reg => {
-    // 每次開啟 App 自動檢查更新
+    // 每次開啟 App 立即檢查更新
     reg.update();
+    // App 從背景回到前景時也檢查一次（省電又即時）
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') reg.update();
+    });
     // 偵測到新版 SW 時自動重載頁面
     reg.addEventListener('updatefound', () => {
       const newSW = reg.installing;
+      if (!newSW) return;
       newSW.addEventListener('statechange', () => {
         if (newSW.state === 'activated') {
           window.location.reload();
@@ -2560,6 +2565,10 @@ if ('serviceWorker' in navigator) {
       });
     });
   }).catch(err => console.log('SW reg failed:', err));
+  // 監聽 SW 控制權轉移，立即重載
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+  });
 }
 
 // ===== INIT =====
