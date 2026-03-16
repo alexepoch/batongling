@@ -1,0 +1,2536 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="小巴彤羚秘書">
+<meta name="theme-color" content="#F5EDE3">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>小巴彤羚秘書</title>
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@300;400;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-cream: #F5EDE3;
+  --bg-warm: #FDF8F2;
+  --text-main: #4A3728;
+  --text-light: #8B7355;
+  --text-hint: #B8A68E;
+  --accent-rose: #D4908A;
+  --accent-rose-light: #F2D5D0;
+  --accent-sage: #9BB09C;
+  --accent-sage-light: #D4E4D5;
+  --accent-lavender: #B8A9C9;
+  --accent-lavender-light: #E3DAF0;
+  --accent-gold: #D4B96A;
+  --accent-gold-light: #F0E6C8;
+  --urgent-red: #C75C5C;
+  --urgent-red-light: #F5D5D5;
+  --card-shadow: 0 2px 12px rgba(74, 55, 40, 0.08);
+  --card-shadow-hover: 0 4px 20px rgba(74, 55, 40, 0.14);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --font-hand: 'LXGW WenKai TC', cursive;
+  --font-body: 'Noto Sans TC', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-cream);
+  color: var(--text-main);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Watercolor floral background */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: 
+    radial-gradient(ellipse at 10% 10%, rgba(212, 144, 138, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 90% 20%, rgba(184, 169, 201, 0.10) 0%, transparent 45%),
+    radial-gradient(ellipse at 20% 80%, rgba(155, 176, 156, 0.10) 0%, transparent 45%),
+    radial-gradient(ellipse at 80% 90%, rgba(212, 185, 106, 0.08) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Paper texture overlay */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app-container {
+  position: relative;
+  z-index: 1;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 20px 100px;
+  width: 100%;
+}
+
+/* ===== BOOK COVER OVERLAY ===== */
+.book-cover-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 200;
+  background: var(--bg-cream);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.4s ease 0.5s;
+}
+.book-cover-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The 3D standing book */
+.standing-book {
+  position: relative;
+  width: 240px;
+  height: 340px;
+  cursor: pointer;
+  perspective: 1000px;
+  margin-bottom: 20px;
+}
+
+.standing-book-cover {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(145deg, #8B6F5E 0%, #6B5245 40%, #5A4538 100%);
+  border-radius: 4px 14px 14px 4px;
+  box-shadow:
+    -3px 0 0 #4A3728,
+    -5px 1px 0 #3D2E20,
+    -7px 2px 0 #362A1C,
+    -9px 3px 0 #30241A,
+    0 8px 30px rgba(74, 55, 40, 0.35),
+    inset 0 0 30px rgba(0,0,0,0.12);
+  overflow: hidden;
+  transform-origin: left center;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+}
+
+/* Leather texture */
+.standing-book-cover::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 128 128' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* Spine shadow */
+.standing-book-cover::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 18px;
+  height: 100%;
+  background: linear-gradient(to right, rgba(0,0,0,0.22), rgba(0,0,0,0.06) 50%, rgba(255,255,255,0.04) 70%, transparent);
+  z-index: 3;
+}
+
+/* Pages stack visible from left */
+.standing-book-pages {
+  position: absolute;
+  top: 5px; bottom: 5px; left: -8px;
+  width: 8px;
+  background: linear-gradient(to right, #C8BBA8, #D4C8B8 2px, #E0D5C5 4px, #E8DDD0 6px, #F0E8DC);
+  border-radius: 2px 0 0 2px;
+  z-index: 1;
+  box-shadow: -1px 0 3px rgba(74,55,40,0.1);
+}
+
+/* Pages visible from bottom */
+.standing-book-bottom {
+  position: absolute;
+  bottom: -4px; left: -6px; right: 4px;
+  height: 4px;
+  background: linear-gradient(to bottom, #E0D5C5, #D4C8B8);
+  border-radius: 0 0 2px 2px;
+  z-index: 0;
+}
+
+/* Gold frame on cover */
+.cover-frame {
+  position: absolute;
+  top: 28px; left: 28px; right: 18px; bottom: 28px;
+  border: 1.5px solid rgba(212, 185, 106, 0.3);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+}
+.cover-frame::before, .cover-frame::after {
+  content: '✿';
+  position: absolute;
+  color: rgba(212, 185, 106, 0.35);
+  font-size: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.cover-frame::before { top: -7px; }
+.cover-frame::after { bottom: -7px; }
+
+.cover-title {
+  font-family: var(--font-hand);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: rgba(212, 185, 106, 0.8);
+  letter-spacing: 3px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.cover-subtitle {
+  font-family: var(--font-hand);
+  font-size: 0.8rem;
+  color: rgba(212, 185, 106, 0.4);
+  margin-top: 8px;
+  letter-spacing: 2px;
+}
+
+.cover-flower {
+  margin: 14px auto 0;
+  display: block;
+  opacity: 0.45;
+}
+
+/* Flip animation */
+.standing-book.flipping .standing-book-cover {
+  transform: rotateY(-160deg);
+  box-shadow: none;
+}
+
+/* Tap hint below the book */
+.cover-tap-hint {
+  font-family: var(--font-hand);
+  font-size: 0.9rem;
+  color: var(--text-hint);
+  letter-spacing: 1px;
+  animation: hintPulse 2.5s ease infinite;
+}
+@keyframes hintPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+/* Watercolor blobs on cover overlay background */
+.cover-bg-decor {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== INNER PAGE BACKGROUND (clean watercolor paper) ===== */
+.inner-page-bg {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.inner-page-bg::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent 5%, rgba(74,55,40,0.06) 20%, rgba(74,55,40,0.08) 50%, rgba(74,55,40,0.06) 80%, transparent 95%);
+}
+
+.inner-page-bg::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 10px;
+  height: 100%;
+  background: linear-gradient(to right, rgba(180,165,145,0.18), transparent);
+}
+
+.page-edge-right {
+  position: fixed;
+  top: 0; right: 0;
+  width: 10px;
+  height: 100%;
+  background: linear-gradient(to left, rgba(180,165,145,0.18), transparent);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.page-fold {
+  position: fixed;
+  top: 0; right: 0;
+  width: 36px;
+  height: 36px;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(225deg, var(--bg-cream) 0%, var(--bg-cream) 45%, rgba(210,195,175,0.35) 48%, rgba(180,165,145,0.12) 52%, transparent 55%);
+}
+
+/* Floral corners */
+.floral-corner-tl, .floral-corner-br {
+  position: fixed;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.4;
+}
+.floral-corner-tl { top: -20px; left: -20px; width: 160px; height: 160px; }
+.floral-corner-br { bottom: -20px; right: -20px; width: 140px; height: 140px; }
+
+/* ===== TODO PAGE ADD BUTTON (floating) ===== */
+.todo-fab {
+  position: fixed;
+  bottom: 28px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-rose), var(--accent-lavender));
+  color: white;
+  font-size: 1.6rem;
+  cursor: pointer;
+  z-index: 110;
+  box-shadow: 0 4px 16px rgba(212,144,138,0.35);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s;
+}
+.todo-fab:active { transform: scale(0.9); }
+.todo-fab.visible { display: flex; }
+
+/* ===== HEADER / LOGO ===== */
+.header {
+  text-align: center;
+  padding: 40px 0 10px;
+  position: relative;
+}
+
+.header-floral {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  height: 80px;
+  opacity: 0.5;
+}
+
+.logo-title {
+  font-family: var(--font-hand);
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: 4px;
+  position: relative;
+}
+
+.logo-subtitle {
+  font-family: var(--font-hand);
+  font-size: 0.95rem;
+  color: var(--text-light);
+  margin-top: 2px;
+  letter-spacing: 2px;
+}
+
+/* Decorative floral divider */
+.floral-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 8px 0 16px;
+  color: var(--accent-rose);
+  opacity: 0.5;
+  font-size: 0.85rem;
+}
+.floral-divider::before, .floral-divider::after {
+  content: '';
+  width: 50px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--accent-rose), transparent);
+}
+
+/* ===== SMART HINT ===== */
+.smart-hint {
+  text-align: center;
+  padding: 12px 16px;
+  font-family: var(--font-hand);
+  font-size: 1.05rem;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: color 0.3s;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.smart-hint:hover { color: var(--accent-rose); }
+.smart-hint .count { color: var(--accent-rose); font-weight: 700; }
+
+/* ===== SEARCH BOX ===== */
+.search-box {
+  position: relative;
+  margin: 8px 0 20px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 18px 56px 18px 24px;
+  border: 2px solid rgba(212, 144, 138, 0.3);
+  border-radius: 50px;
+  background: var(--bg-warm);
+  font-family: var(--font-hand);
+  font-size: 1.15rem;
+  color: var(--text-main);
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(74, 55, 40, 0.05);
+}
+.search-input::placeholder { color: var(--text-hint); }
+.search-input:focus {
+  border-color: var(--accent-rose);
+  box-shadow: 0 4px 16px rgba(212, 144, 138, 0.15);
+}
+
+.voice-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-rose), var(--accent-lavender));
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+.voice-btn:active { transform: translateY(-50%) scale(0.92); }
+.voice-btn.listening {
+  animation: pulse-voice 1.2s infinite;
+}
+@keyframes pulse-voice {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 144, 138, 0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(212, 144, 138, 0); }
+}
+
+/* ===== REMEMBER CARDS ===== */
+.remember-section {
+  margin: 0 0 20px;
+  display: none;
+}
+.remember-section.show { display: block; }
+
+.remember-label {
+  font-family: var(--font-hand);
+  font-size: 0.95rem;
+  color: var(--text-light);
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.remember-cards {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 4px 0 8px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.remember-cards::-webkit-scrollbar { display: none; }
+
+.remember-card {
+  flex: 0 0 auto;
+  width: 120px;
+  padding: 14px 12px;
+  background: var(--bg-warm);
+  border: 1px solid rgba(212, 144, 138, 0.2);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-hand);
+  font-size: 0.9rem;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--card-shadow);
+  position: relative;
+  overflow: hidden;
+}
+.remember-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px;
+  height: 100%;
+}
+.remember-card:nth-child(1)::before { background: var(--accent-rose); }
+.remember-card:nth-child(2)::before { background: var(--accent-sage); }
+.remember-card:nth-child(3)::before { background: var(--accent-lavender); }
+.remember-card:nth-child(4)::before { background: var(--accent-gold); }
+.remember-card:nth-child(5)::before { background: var(--accent-rose); }
+.remember-card:active { transform: scale(0.96); }
+
+.remember-card-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+.remember-card-date {
+  font-size: 0.75rem;
+  color: var(--text-hint);
+  margin-top: 6px;
+}
+
+/* ===== NAV GRID ===== */
+.nav-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.nav-card {
+  padding: 20px 16px;
+  background: var(--bg-warm);
+  border: 1px solid rgba(212, 144, 138, 0.15);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--card-shadow);
+  text-align: center;
+}
+.nav-card:active { transform: scale(0.97); box-shadow: var(--card-shadow-hover); }
+
+.nav-card-icon {
+  font-size: 1.6rem;
+  margin-bottom: 6px;
+}
+
+.nav-card-label {
+  font-family: var(--font-hand);
+  font-size: 1rem;
+  color: var(--text-main);
+  font-weight: 400;
+}
+
+/* ===== WEATHER CARD ===== */
+.weather-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.weather-card {
+  flex: 1;
+  background: linear-gradient(135deg, var(--bg-warm), rgba(155, 176, 156, 0.1));
+  border: 1px solid rgba(155, 176, 156, 0.2);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  box-shadow: var(--card-shadow);
+  text-align: center;
+}
+
+.weather-city {
+  font-family: var(--font-hand);
+  font-size: 0.85rem;
+  color: var(--text-hint);
+  margin-bottom: 4px;
+}
+.weather-icon { font-size: 1.6rem; }
+.weather-temp {
+  font-family: var(--font-hand);
+  font-size: 1.15rem;
+  color: var(--text-main);
+  margin-top: 2px;
+}
+.weather-desc {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+.weather-rain-alert {
+  background: var(--accent-rose-light);
+  border: 1px solid rgba(212,144,138,0.25);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  margin-bottom: 12px;
+  font-family: var(--font-hand);
+  font-size: 0.9rem;
+  color: var(--urgent-red);
+  text-align: center;
+  display: none;
+}
+.weather-rain-alert.show { display: block; }
+
+/* ===== GUIDE LINK ===== */
+.guide-link {
+  display: block;
+  text-align: center;
+  padding: 14px;
+  background: var(--bg-warm);
+  border: 1px dashed rgba(184, 169, 201, 0.4);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-hand);
+  font-size: 0.95rem;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-bottom: 20px;
+}
+.guide-link:active { background: var(--accent-lavender-light); }
+
+/* ===== PAGES (todo list, completed, etc.) ===== */
+.page {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--bg-cream);
+  z-index: 100;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  transform-origin: left center;
+}
+.page.active {
+  display: block;
+  animation: pageFlipIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.page.closing {
+  display: block;
+  animation: pageFlipOut 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes pageFlipIn {
+  0% { transform: perspective(1200px) rotateY(90deg); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: perspective(1200px) rotateY(0deg); opacity: 1; }
+}
+@keyframes pageFlipOut {
+  0% { transform: perspective(1200px) rotateY(0deg); opacity: 1; }
+  60% { opacity: 1; }
+  100% { transform: perspective(1200px) rotateY(90deg); opacity: 0; }
+}
+
+.page-header {
+  position: sticky;
+  top: 0;
+  background: var(--bg-cream);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 10;
+  border-bottom: 1px solid rgba(212, 144, 138, 0.15);
+}
+
+.back-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: var(--bg-warm);
+  color: var(--text-main);
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-title {
+  font-family: var(--font-hand);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.page-content {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px 20px 100px;
+}
+
+/* ===== TODO ITEMS ===== */
+.todo-filter {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  padding: 4px 0;
+  scrollbar-width: none;
+}
+.todo-filter::-webkit-scrollbar { display: none; }
+
+.filter-chip {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  border: 1px solid rgba(212, 144, 138, 0.3);
+  border-radius: 20px;
+  background: var(--bg-warm);
+  font-family: var(--font-hand);
+  font-size: 0.85rem;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+.filter-chip.active {
+  background: var(--accent-rose);
+  color: white;
+  border-color: var(--accent-rose);
+}
+
+.todo-empty {
+  text-align: center;
+  padding: 60px 20px;
+  font-family: var(--font-hand);
+  color: var(--text-hint);
+  font-size: 1.1rem;
+}
+
+.todo-item {
+  background: var(--bg-warm);
+  border: 1px solid rgba(212, 144, 138, 0.12);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: all 0.3s ease;
+  box-shadow: var(--card-shadow);
+  position: relative;
+  overflow: hidden;
+}
+.todo-item.overdue {
+  border-left: 4px solid var(--urgent-red);
+  background: var(--urgent-red-light);
+}
+.todo-item.completing {
+  animation: completeAnim 0.6s ease forwards;
+}
+@keyframes completeAnim {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(0.95); opacity: 0; height: 0; padding: 0; margin: 0; border: none; }
+}
+
+.todo-checkbox {
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--accent-rose);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: all 0.3s;
+  background: transparent;
+}
+.todo-checkbox:active { transform: scale(0.85); }
+.todo-checkbox.checked {
+  background: var(--accent-rose);
+  color: white;
+  font-size: 0.8rem;
+}
+
+.todo-body { flex: 1; min-width: 0; }
+
+.todo-title {
+  font-family: var(--font-hand);
+  font-size: 1.05rem;
+  color: var(--text-main);
+  line-height: 1.4;
+  word-break: break-word;
+}
+.todo-item.completed .todo-title {
+  text-decoration: line-through;
+  color: var(--text-hint);
+}
+
+.todo-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.todo-tag {
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-family: var(--font-body);
+}
+.tag-urgent { background: var(--urgent-red-light); color: var(--urgent-red); }
+.tag-normal { background: var(--accent-gold-light); color: #B8960A; }
+.tag-later { background: var(--accent-sage-light); color: #5A7A5B; }
+.tag-category { background: var(--accent-lavender-light); color: #7B6B8E; }
+.tag-time { background: rgba(212, 144, 138, 0.15); color: var(--accent-rose); }
+
+.todo-detail {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.todo-item-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.todo-action-btn {
+  padding: 4px 10px;
+  border: 1px solid rgba(212,144,138,0.2);
+  border-radius: 8px;
+  background: transparent;
+  font-size: 0.75rem;
+  color: var(--text-light);
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.todo-action-btn:active { background: var(--accent-rose-light); }
+.todo-action-btn.delete { color: var(--urgent-red); border-color: rgba(199,92,92,0.2); }
+
+/* ===== MODAL ===== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(74, 55, 40, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.active {
+  display: flex;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: var(--bg-warm);
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 24px 20px 40px;
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.modal-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--text-hint);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+  opacity: 0.4;
+}
+
+.modal-title {
+  font-family: var(--font-hand);
+  font-size: 1.3rem;
+  color: var(--text-main);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.modal-field {
+  margin-bottom: 18px;
+}
+
+.modal-label {
+  font-family: var(--font-hand);
+  font-size: 0.95rem;
+  color: var(--text-light);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.modal-input, .modal-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid rgba(212, 144, 138, 0.25);
+  border-radius: var(--radius-sm);
+  background: var(--bg-cream);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--text-main);
+  outline: none;
+  transition: border-color 0.3s;
+}
+.modal-input:focus, .modal-textarea:focus {
+  border-color: var(--accent-rose);
+}
+.modal-textarea {
+  resize: none;
+  height: 70px;
+}
+
+.modal-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.modal-option {
+  padding: 8px 16px;
+  border: 1.5px solid rgba(212, 144, 138, 0.25);
+  border-radius: 20px;
+  background: var(--bg-cream);
+  font-family: var(--font-hand);
+  font-size: 0.9rem;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.modal-option.selected {
+  border-color: var(--accent-rose);
+  background: var(--accent-rose-light);
+  color: var(--text-main);
+}
+
+.modal-option.urgent.selected { background: var(--urgent-red-light); border-color: var(--urgent-red); color: var(--urgent-red); }
+.modal-option.normal.selected { background: var(--accent-gold-light); border-color: var(--accent-gold); color: #8B7A3A; }
+.modal-option.later.selected { background: var(--accent-sage-light); border-color: var(--accent-sage); color: #5A7A5B; }
+
+.time-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.time-row input[type="date"], .time-row input[type="time"] {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1.5px solid rgba(212, 144, 138, 0.25);
+  border-radius: var(--radius-sm);
+  background: var(--bg-cream);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--text-main);
+  outline: none;
+}
+.time-row input:focus { border-color: var(--accent-rose); }
+
+.reminder-options {
+  display: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.reminder-options.show { display: flex; }
+
+.modal-submit {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(135deg, var(--accent-rose), var(--accent-lavender));
+  color: white;
+  font-family: var(--font-hand);
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 10px;
+  letter-spacing: 2px;
+}
+.modal-submit:active { transform: scale(0.97); }
+
+.add-tag-input {
+  display: none;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+.add-tag-input.show { display: flex; }
+.add-tag-input input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1.5px solid rgba(212,144,138,0.25);
+  border-radius: var(--radius-sm);
+  background: var(--bg-cream);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-main);
+  outline: none;
+}
+.add-tag-input button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent-sage);
+  color: white;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+/* ===== SHOPPING LIST ===== */
+.shopping-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.shopping-input-row input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1.5px solid rgba(155,176,156,0.3);
+  border-radius: 50px;
+  background: var(--bg-warm);
+  font-family: var(--font-hand);
+  font-size: 1rem;
+  color: var(--text-main);
+  outline: none;
+}
+.shopping-input-row input:focus { border-color: var(--accent-sage); }
+.shopping-add-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent-sage);
+  color: white;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.shopping-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-warm);
+  border: 1px solid rgba(155,176,156,0.15);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  transition: all 0.3s;
+}
+.shopping-item.bought {
+  opacity: 0.5;
+  animation: shoppingDone 0.5s ease forwards;
+}
+@keyframes shoppingDone {
+  to { height: 0; padding: 0; margin: 0; opacity: 0; overflow: hidden; }
+}
+
+.shopping-item .todo-checkbox { border-color: var(--accent-sage); }
+.shopping-item .todo-checkbox.checked { background: var(--accent-sage); }
+
+/* ===== REPEAT TASKS ===== */
+.repeat-item {
+  background: var(--bg-warm);
+  border: 1px solid rgba(184,169,201,0.2);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.repeat-info { flex: 1; }
+.repeat-title {
+  font-family: var(--font-hand);
+  font-size: 1rem;
+  color: var(--text-main);
+}
+.repeat-schedule {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  margin-top: 4px;
+}
+.repeat-delete {
+  padding: 6px 12px;
+  border: 1px solid rgba(199,92,92,0.2);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--urgent-red);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.repeat-add-btn {
+  width: 100%;
+  padding: 14px;
+  border: 2px dashed rgba(184,169,201,0.4);
+  border-radius: var(--radius);
+  background: transparent;
+  font-family: var(--font-hand);
+  font-size: 1rem;
+  color: var(--text-light);
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+/* ===== GUIDE PAGE ===== */
+.guide-section {
+  margin-bottom: 24px;
+}
+.guide-section-title {
+  font-family: var(--font-hand);
+  font-size: 1.1rem;
+  color: var(--accent-rose);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(212,144,138,0.2);
+}
+.guide-text {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  line-height: 1.7;
+}
+.guide-example {
+  background: var(--bg-cream);
+  border-left: 3px solid var(--accent-rose);
+  padding: 10px 14px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin: 8px 0;
+  font-family: var(--font-hand);
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+/* ===== STAMP ANIMATION ===== */
+.stamp-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 300;
+  pointer-events: none;
+  align-items: center;
+  justify-content: center;
+}
+.stamp-overlay.show {
+  display: flex;
+  animation: stampPop 0.6s ease forwards;
+}
+@keyframes stampPop {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.stamp {
+  width: 140px;
+  height: 140px;
+  border: 4px solid var(--accent-rose);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-hand);
+  font-size: 1.3rem;
+  color: var(--accent-rose);
+  font-weight: 700;
+  transform: rotate(-15deg);
+  background: rgba(242, 213, 208, 0.9);
+  animation: stampIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+@keyframes stampIn {
+  0% { transform: rotate(-15deg) scale(3); opacity: 0; }
+  60% { transform: rotate(-15deg) scale(0.9); opacity: 1; }
+  100% { transform: rotate(-15deg) scale(1); }
+}
+
+/* ===== NOTIF PERMISSION BANNER ===== */
+.notif-banner {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-warm);
+  border: 1px solid rgba(212,144,138,0.3);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  box-shadow: 0 4px 24px rgba(74,55,40,0.15);
+  z-index: 250;
+  max-width: 400px;
+  width: calc(100% - 40px);
+  text-align: center;
+}
+.notif-banner.show { display: block; animation: slideUp 0.3s ease; }
+.notif-banner p {
+  font-family: var(--font-hand);
+  font-size: 0.95rem;
+  color: var(--text-main);
+  margin-bottom: 12px;
+}
+.notif-banner-btns { display: flex; gap: 10px; justify-content: center; }
+.notif-allow {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 20px;
+  background: var(--accent-rose);
+  color: white;
+  font-family: var(--font-hand);
+  cursor: pointer;
+}
+.notif-deny {
+  padding: 10px 24px;
+  border: 1px solid rgba(212,144,138,0.3);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--text-light);
+  font-family: var(--font-hand);
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<!-- BOOK COVER OVERLAY -->
+<div class="book-cover-overlay" id="bookOverlay">
+  <div class="cover-bg-decor">
+    <svg width="100%" height="100%" style="position:absolute;top:0;left:0;">
+      <circle cx="15%" cy="20%" r="80" fill="rgba(212,144,138,0.08)"/>
+      <circle cx="85%" cy="25%" r="60" fill="rgba(184,169,201,0.07)"/>
+      <circle cx="20%" cy="80%" r="70" fill="rgba(155,176,156,0.06)"/>
+      <circle cx="80%" cy="85%" r="50" fill="rgba(212,185,106,0.05)"/>
+    </svg>
+  </div>
+  <div class="standing-book" id="standingBook" onclick="openBook()">
+    <div class="standing-book-cover">
+      <div class="cover-frame">
+        <div class="cover-title">小巴彤羚<br>秘書</div>
+        <div class="cover-subtitle">你的手帳待辦本</div>
+        <svg class="cover-flower" width="60" height="40" viewBox="0 0 60 40" fill="none">
+          <ellipse cx="30" cy="20" rx="8" ry="10" fill="rgba(212,185,106,0.3)" transform="rotate(-30 30 20)"/>
+          <ellipse cx="30" cy="20" rx="8" ry="10" fill="rgba(212,185,106,0.25)" transform="rotate(30 30 20)"/>
+          <ellipse cx="30" cy="20" rx="8" ry="10" fill="rgba(212,185,106,0.2)" transform="rotate(90 30 20)"/>
+          <ellipse cx="30" cy="20" rx="8" ry="10" fill="rgba(212,185,106,0.2)"/>
+          <ellipse cx="30" cy="20" rx="8" ry="10" fill="rgba(212,185,106,0.25)" transform="rotate(60 30 20)"/>
+          <circle cx="30" cy="20" r="4" fill="rgba(212,185,106,0.5)"/>
+        </svg>
+      </div>
+    </div>
+    <div class="standing-book-pages"></div>
+    <div class="standing-book-bottom"></div>
+  </div>
+  <div class="cover-tap-hint">輕觸翻開 ✿</div>
+</div>
+
+<!-- Inner page background (clean watercolor paper) -->
+<div class="inner-page-bg"></div>
+<div class="page-edge-right"></div>
+<div class="page-fold"></div>
+
+<!-- Watercolor floral corners -->
+<svg class="floral-corner-tl" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="30" cy="30" r="35" fill="rgba(212,144,138,0.18)"/>
+  <circle cx="20" cy="50" r="22" fill="rgba(212,144,138,0.12)"/>
+  <circle cx="55" cy="20" r="18" fill="rgba(242,213,208,0.2)"/>
+  <circle cx="60" cy="55" r="14" fill="rgba(184,169,201,0.12)"/>
+  <circle cx="80" cy="35" r="10" fill="rgba(155,176,156,0.1)"/>
+  <ellipse cx="40" cy="75" rx="20" ry="8" fill="rgba(155,176,156,0.1)"/>
+  <circle cx="15" cy="80" r="12" fill="rgba(212,185,106,0.08)"/>
+</svg>
+
+<svg class="floral-corner-br" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="110" cy="110" r="30" fill="rgba(155,176,156,0.15)"/>
+  <circle cx="120" cy="90" r="18" fill="rgba(155,176,156,0.1)"/>
+  <circle cx="90" cy="120" r="16" fill="rgba(212,185,106,0.1)"/>
+  <circle cx="85" cy="95" r="12" fill="rgba(184,169,201,0.1)"/>
+  <circle cx="105" cy="75" r="8" fill="rgba(212,144,138,0.08)"/>
+</svg>
+
+<!-- STAMP OVERLAY -->
+<div class="stamp-overlay" id="stampOverlay">
+  <div class="stamp">完成！✿</div>
+</div>
+
+<!-- NOTIFICATION BANNER -->
+<div class="notif-banner" id="notifBanner">
+  <p>開啟通知，讓小巴彤羚秘書提醒你待辦事項 ✿</p>
+  <div class="notif-banner-btns">
+    <button class="notif-allow" onclick="requestNotifPermission()">好的</button>
+    <button class="notif-deny" onclick="dismissNotifBanner()">之後再說</button>
+  </div>
+</div>
+
+<!-- ===== HOME PAGE ===== -->
+<div class="app-container" id="homePage">
+  <!-- Header -->
+  <div class="header">
+    <svg class="header-floral" viewBox="0 0 280 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="40" cy="40" r="18" fill="rgba(212,144,138,0.15)" />
+      <circle cx="35" cy="32" r="10" fill="rgba(212,144,138,0.1)" />
+      <circle cx="48" cy="35" r="8" fill="rgba(242,213,208,0.2)" />
+      <circle cx="240" cy="40" r="18" fill="rgba(184,169,201,0.15)" />
+      <circle cx="245" cy="32" r="10" fill="rgba(184,169,201,0.1)" />
+      <circle cx="232" cy="35" r="8" fill="rgba(227,218,240,0.2)" />
+      <ellipse cx="140" cy="60" rx="60" ry="4" fill="rgba(155,176,156,0.12)" />
+      <path d="M100 55 Q120 45 140 55 Q160 65 180 55" stroke="rgba(155,176,156,0.2)" stroke-width="1" fill="none" />
+      <circle cx="90" cy="50" r="5" fill="rgba(155,176,156,0.1)" />
+      <circle cx="190" cy="50" r="5" fill="rgba(212,185,106,0.1)" />
+    </svg>
+    <div class="logo-title">小巴彤羚秘書</div>
+    <div class="logo-subtitle">你的手帳待辦本</div>
+  </div>
+
+  <div class="floral-divider">✿</div>
+
+  <!-- Smart Hint -->
+  <div class="smart-hint" id="smartHint" onclick="handleSmartHintClick()">
+    載入中...
+  </div>
+
+  <!-- Search Box -->
+  <div class="search-box">
+    <input type="text" class="search-input" id="mainInput" placeholder="現在要做什麼？" enterkeyhint="done" oninput="updateActionBtn()">
+    <button class="voice-btn" id="actionBtn" onclick="handleActionBtn()"><svg id="micIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg><svg id="sendIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+  </div>
+
+  <!-- Remember Cards -->
+  <div class="remember-section" id="rememberSection">
+    <div class="remember-label">還記得嗎？你之前想完成的事 ✿</div>
+    <div class="remember-cards" id="rememberCards"></div>
+  </div>
+
+  <!-- Nav Grid -->
+  <div class="nav-grid">
+    <div class="nav-card" onclick="openPage('todoPage')">
+      <div class="nav-card-icon">📋</div>
+      <div class="nav-card-label">待辦事項</div>
+    </div>
+    <div class="nav-card" onclick="openPage('completedPage')">
+      <div class="nav-card-icon">✅</div>
+      <div class="nav-card-label">已完成</div>
+    </div>
+    <div class="nav-card" onclick="openPage('repeatPage')">
+      <div class="nav-card-icon">🔁</div>
+      <div class="nav-card-label">重複事項</div>
+    </div>
+    <div class="nav-card" onclick="openPage('shoppingPage')">
+      <div class="nav-card-icon">🛒</div>
+      <div class="nav-card-label">購物清單</div>
+    </div>
+  </div>
+
+  <!-- Rain Alert -->
+  <div class="weather-rain-alert" id="rainAlert">🌂 注意！今天可能會下雨，記得帶傘</div>
+
+  <!-- Weather -->
+  <div class="weather-row">
+    <div class="weather-card" id="weatherTaipei">
+      <div class="weather-city">台北</div>
+      <div class="weather-icon" id="weatherIconTaipei">🌤️</div>
+      <div class="weather-temp" id="weatherTempTaipei">--°C</div>
+      <div class="weather-desc" id="weatherDescTaipei">載入中...</div>
+    </div>
+    <div class="weather-card" id="weatherZhonghe">
+      <div class="weather-city">中和</div>
+      <div class="weather-icon" id="weatherIconZhonghe">🌤️</div>
+      <div class="weather-temp" id="weatherTempZhonghe">--°C</div>
+      <div class="weather-desc" id="weatherDescZhonghe">載入中...</div>
+    </div>
+  </div>
+
+  <!-- Guide -->
+  <div class="guide-link" onclick="openPage('guidePage')">📖 使用說明 — 看看小巴彤羚秘書能幫你什麼</div>
+</div>
+
+<!-- ===== TODO PAGE ===== -->
+<div class="page" id="todoPage">
+  <div class="page-header">
+    <button class="back-btn" onclick="closePage('todoPage')">←</button>
+    <div class="page-title">📋 待辦事項</div>
+  </div>
+  <div class="page-content">
+    <div class="todo-filter" id="todoFilter"></div>
+    <div id="todoList"></div>
+  </div>
+  <button class="todo-fab visible" onclick="openAddFromTodo()">＋</button>
+</div>
+
+<!-- ===== COMPLETED PAGE ===== -->
+<div class="page" id="completedPage">
+  <div class="page-header">
+    <button class="back-btn" onclick="closePage('completedPage')">←</button>
+    <div class="page-title">✅ 已完成</div>
+  </div>
+  <div class="page-content">
+    <div id="completedList"></div>
+  </div>
+</div>
+
+<!-- ===== REPEAT PAGE ===== -->
+<div class="page" id="repeatPage">
+  <div class="page-header">
+    <button class="back-btn" onclick="closePage('repeatPage')">←</button>
+    <div class="page-title">🔁 重複事項</div>
+  </div>
+  <div class="page-content">
+    <div id="repeatList"></div>
+    <button class="repeat-add-btn" onclick="openRepeatModal()">＋ 新增重複事項</button>
+  </div>
+</div>
+
+<!-- ===== SHOPPING PAGE ===== -->
+<div class="page" id="shoppingPage">
+  <div class="page-header">
+    <button class="back-btn" onclick="closePage('shoppingPage')">←</button>
+    <div class="page-title">🛒 購物清單</div>
+  </div>
+  <div class="page-content">
+    <div class="shopping-input-row">
+      <input type="text" id="shoppingInput" placeholder="要買什麼？" enterkeyhint="done">
+      <button class="shopping-add-btn" onclick="addShoppingItem()">＋</button>
+    </div>
+    <div id="shoppingList"></div>
+  </div>
+</div>
+
+<!-- ===== GUIDE PAGE ===== -->
+<div class="page" id="guidePage">
+  <div class="page-header">
+    <button class="back-btn" onclick="closePage('guidePage')">←</button>
+    <div class="page-title">📖 使用說明</div>
+  </div>
+  <div class="page-content">
+    <div class="guide-section">
+      <div class="guide-section-title">✿ 新增待辦事項</div>
+      <div class="guide-text">
+        在首頁的「現在要做什麼？」輸入你想做的事，按下送出後會彈出設定視窗，你可以：
+      </div>
+      <div class="guide-example">「晚上七點看電影」→ 自動帶入時間</div>
+      <div class="guide-example">「買新的拍攝燈」→ 手動選擇分類和時間</div>
+      <div class="guide-text" style="margin-top:8px;">
+        每筆事項可設定：補充細項、提醒時間（可選提前幾分鐘或幾天）、急迫度（緊急/還好/有空再做）、分類標籤。
+      </div>
+    </div>
+    <div class="guide-section">
+      <div class="guide-section-title">✿ 語音輸入</div>
+      <div class="guide-text">按下 🎤 按鈕用說的也行！第一次使用會詢問麥克風權限，允許後以後就不會再問了。</div>
+    </div>
+    <div class="guide-section">
+      <div class="guide-section-title">✿ 提醒通知</div>
+      <div class="guide-text">設定了時間的待辦事項，小巴彤羚秘書會在指定時間推播通知提醒你。可以選擇準時、提前 15 分鐘到 7 天前提醒。逾期未完成的事項會在首頁變紅色提醒。</div>
+    </div>
+    <div class="guide-section">
+      <div class="guide-section-title">✿ 重複事項</div>
+      <div class="guide-text">
+        有些事情是固定要做的，例如：
+      </div>
+      <div class="guide-example">「每週一採購食材」</div>
+      <div class="guide-example">「每月 5 號繳房租」</div>
+      <div class="guide-text" style="margin-top:8px;">在重複事項頁面設定一次，小巴彤羚秘書就會自動在對應時間產生新的待辦事項。</div>
+    </div>
+    <div class="guide-section">
+      <div class="guide-section-title">✿ 購物清單</div>
+      <div class="guide-text">買東西用的輕量清單，輸入品名就加入，買了打勾就消失，快速方便。</div>
+    </div>
+    <div class="guide-section">
+      <div class="guide-section-title">✿ 資料儲存</div>
+      <div class="guide-text">所有資料存在你的手機裡，不需要帳號也不會上傳。清除瀏覽器資料會清除待辦紀錄，請留意。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADD TODO MODAL ===== -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✿ 新增待辦事項</div>
+    
+    <div class="modal-field">
+      <label class="modal-label">📝 事項標題</label>
+      <input type="text" class="modal-input" id="modalTitle" readonly>
+    </div>
+
+    <div class="modal-field">
+      <label class="modal-label">📎 補充細項（選填）</label>
+      <textarea class="modal-textarea" id="modalDetail" placeholder="例如：記得帶票、找某個品牌..."></textarea>
+    </div>
+
+    <div class="modal-field">
+      <label class="modal-label">⏰ 要設定提醒時間嗎？</label>
+      <div class="time-row">
+        <input type="date" id="modalDate">
+        <input type="time" id="modalTime">
+      </div>
+      <div class="reminder-options" id="reminderOptions">
+        <label class="modal-label" style="width:100%;margin-top:10px;">提前多久提醒？</label>
+        <div class="modal-option selected" data-remind="0" onclick="selectReminder(this)">準時</div>
+        <div class="modal-option" data-remind="15" onclick="selectReminder(this)">15 分鐘前</div>
+        <div class="modal-option" data-remind="30" onclick="selectReminder(this)">30 分鐘前</div>
+        <div class="modal-option" data-remind="60" onclick="selectReminder(this)">1 小時前</div>
+        <div class="modal-option" data-remind="1440" onclick="selectReminder(this)">1 天前</div>
+        <div class="modal-option" data-remind="4320" onclick="selectReminder(this)">3 天前</div>
+        <div class="modal-option" data-remind="10080" onclick="selectReminder(this)">7 天前</div>
+      </div>
+    </div>
+
+    <div class="modal-field">
+      <label class="modal-label">🔥 急迫度</label>
+      <div class="modal-options">
+        <div class="modal-option urgent" data-urgency="urgent" onclick="selectUrgency(this)">🔴 緊急</div>
+        <div class="modal-option normal selected" data-urgency="normal" onclick="selectUrgency(this)">🟡 還好</div>
+        <div class="modal-option later" data-urgency="later" onclick="selectUrgency(this)">🔵 有空再做</div>
+      </div>
+    </div>
+
+    <div class="modal-field">
+      <label class="modal-label">🏷️ 分類</label>
+      <div class="modal-options" id="categoryOptions"></div>
+      <div class="add-tag-input" id="addTagInput">
+        <input type="text" id="newTagName" placeholder="新分類名稱">
+        <button onclick="addCustomTag()">新增</button>
+      </div>
+    </div>
+
+    <button class="modal-submit" onclick="submitTodo()">✿ 確認新增</button>
+  </div>
+</div>
+
+<!-- ===== REPEAT MODAL ===== -->
+<div class="modal-overlay" id="repeatModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔁 新增重複事項</div>
+
+    <div class="modal-field">
+      <label class="modal-label">📝 事項名稱</label>
+      <input type="text" class="modal-input" id="repeatTitle" placeholder="例如：採購食材">
+    </div>
+
+    <div class="modal-field">
+      <label class="modal-label">🔄 重複頻率</label>
+      <div class="modal-options">
+        <div class="modal-option selected" data-freq="weekly" onclick="selectFreq(this)">每週</div>
+        <div class="modal-option" data-freq="monthly" onclick="selectFreq(this)">每月</div>
+      </div>
+    </div>
+
+    <div class="modal-field" id="weekdayField">
+      <label class="modal-label">星期幾？</label>
+      <div class="modal-options">
+        <div class="modal-option" data-day="1" onclick="selectDay(this)">一</div>
+        <div class="modal-option" data-day="2" onclick="selectDay(this)">二</div>
+        <div class="modal-option" data-day="3" onclick="selectDay(this)">三</div>
+        <div class="modal-option" data-day="4" onclick="selectDay(this)">四</div>
+        <div class="modal-option" data-day="5" onclick="selectDay(this)">五</div>
+        <div class="modal-option" data-day="6" onclick="selectDay(this)">六</div>
+        <div class="modal-option" data-day="0" onclick="selectDay(this)">日</div>
+      </div>
+    </div>
+
+    <div class="modal-field" id="monthdayField" style="display:none;">
+      <label class="modal-label">每月幾號？</label>
+      <input type="number" class="modal-input" id="monthDay" min="1" max="31" placeholder="例如：5">
+    </div>
+
+    <button class="modal-submit" onclick="submitRepeat()">✿ 確認新增</button>
+  </div>
+</div>
+
+<script>
+// ===== DATA LAYER =====
+const STORAGE_KEYS = {
+  todos: 'secretary_todos',
+  completed: 'secretary_completed',
+  shopping: 'secretary_shopping',
+  repeats: 'secretary_repeats',
+  categories: 'secretary_categories',
+  notifAsked: 'secretary_notif_asked'
+};
+
+function getData(key) {
+  try { return JSON.parse(localStorage.getItem(key)) || []; }
+  catch { return []; }
+}
+function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+function getCategories() {
+  const cats = getData(STORAGE_KEYS.categories);
+  if (cats.length === 0) {
+    const defaults = [
+      { name: '個人', color: '#D4908A' },
+      { name: '工作', color: '#B8A9C9' },
+      { name: '購物', color: '#9BB09C' }
+    ];
+    setData(STORAGE_KEYS.categories, defaults);
+    return defaults;
+  }
+  return cats;
+}
+
+// ===== TIME PARSING =====
+function parseTimeFromText(text) {
+  const result = { date: null, time: null };
+  const today = new Date();
+  
+  // Date patterns
+  const dateMatch = text.match(/(\d{1,2})[\/\-](\d{1,2})/);
+  if (dateMatch) {
+    const m = parseInt(dateMatch[1]);
+    const d = parseInt(dateMatch[2]);
+    let y = today.getFullYear();
+    const testDate = new Date(y, m - 1, d);
+    if (testDate < today) y++;
+    result.date = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  }
+
+  // Tomorrow
+  if (/明天/.test(text)) {
+    const tmr = new Date(today);
+    tmr.setDate(tmr.getDate() + 1);
+    result.date = tmr.toISOString().split('T')[0];
+  }
+  if (/後天/.test(text)) {
+    const dat = new Date(today);
+    dat.setDate(dat.getDate() + 2);
+    result.date = dat.toISOString().split('T')[0];
+  }
+  if (/今天/.test(text) && !result.date) {
+    result.date = today.toISOString().split('T')[0];
+  }
+
+  // Time patterns
+  const timeMatch = text.match(/(早上|上午|下午|晚上|傍晚)?(\d{1,2})[：:\s]?(\d{2})?\s*(點|時)?/);
+  if (timeMatch) {
+    let h = parseInt(timeMatch[2]);
+    const min = timeMatch[3] ? parseInt(timeMatch[3]) : 0;
+    const period = timeMatch[1];
+    
+    if (period === '下午' || period === '晚上' || period === '傍晚') {
+      if (h < 12) h += 12;
+    } else if (period === '早上' || period === '上午') {
+      if (h === 12) h = 0;
+    } else if (!period && h <= 6) {
+      h += 12; // Assume PM for small numbers without period
+    }
+    
+    result.time = `${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
+    if (!result.date) result.date = today.toISOString().split('T')[0];
+  }
+
+  return result;
+}
+
+// ===== NOTIFICATION =====
+function checkNotifPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default' && !localStorage.getItem(STORAGE_KEYS.notifAsked)) {
+    document.getElementById('notifBanner').classList.add('show');
+  }
+}
+
+function requestNotifPermission() {
+  Notification.requestPermission().then(p => {
+    localStorage.setItem(STORAGE_KEYS.notifAsked, 'true');
+    document.getElementById('notifBanner').classList.remove('show');
+  });
+}
+
+function dismissNotifBanner() {
+  localStorage.setItem(STORAGE_KEYS.notifAsked, 'true');
+  document.getElementById('notifBanner').classList.remove('show');
+}
+
+function scheduleNotification(todo) {
+  if (Notification.permission !== 'granted' || !todo.date || !todo.time) return;
+  
+  const target = new Date(`${todo.date}T${todo.time}`);
+  const remindMin = todo.remindBefore || 0;
+  target.setMinutes(target.getMinutes() - remindMin);
+  
+  const delay = target.getTime() - Date.now();
+  if (delay <= 0) return;
+  
+  setTimeout(() => {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'SHOW_NOTIF',
+        title: '小巴彤羚秘書提醒你 ✿',
+        body: todo.title,
+        tag: todo.id
+      });
+    } else {
+      new Notification('小巴彤羚秘書提醒你 ✿', { body: todo.title, icon: 'icon-192.png' });
+    }
+  }, delay);
+}
+
+function rescheduleAllNotifications() {
+  const todos = getData(STORAGE_KEYS.todos);
+  todos.forEach(t => scheduleNotification(t));
+}
+
+// ===== SMART HINT =====
+function updateSmartHint() {
+  const el = document.getElementById('smartHint');
+  const todos = getData(STORAGE_KEYS.todos);
+  const today = new Date().toISOString().split('T')[0];
+  
+  const todayTodos = todos.filter(t => t.date === today && !isItemOverdue(t));
+  const overdue = todos.filter(t => isItemOverdue(t));
+  const laterTodos = todos.filter(t => t.urgency === 'later' || !t.date);
+
+  if (overdue.length > 0) {
+    el.innerHTML = `你有 <span class="count">${overdue.length}</span> 件事已過提醒時間！`;
+    el.onclick = () => openPage('todoPage');
+  } else if (todayTodos.length > 0) {
+    el.innerHTML = `今天還有 <span class="count">${todayTodos.length}</span> 件事要做喔！`;
+    el.onclick = () => openPage('todoPage');
+  } else if (todos.length > 0) {
+    el.textContent = '查看你的待辦事項 ✿';
+    el.onclick = () => openPage('todoPage');
+  } else {
+    el.textContent = '太棒了，目前沒有待辦事項！🎉';
+    el.onclick = null;
+  }
+}
+
+function handleSmartHintClick() {}
+
+// ===== REMEMBER CARDS =====
+function updateRememberCards() {
+  const section = document.getElementById('rememberSection');
+  const container = document.getElementById('rememberCards');
+  const todos = getData(STORAGE_KEYS.todos);
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Show unfinished non-today items
+  const candidates = todos.filter(t => t.date !== today || !t.date).slice(0, 5);
+  
+  if (candidates.length === 0) {
+    section.classList.remove('show');
+    return;
+  }
+  
+  section.classList.add('show');
+  container.innerHTML = candidates.map(t => {
+    const dateStr = t.date ? formatDate(t.date) : '未設日期';
+    return `
+      <div class="remember-card" onclick="openTodoDetail('${t.id}')">
+        <div class="remember-card-text">${escapeHtml(t.title)}</div>
+        <div class="remember-card-date">${dateStr}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openTodoDetail(id) {
+  openPage('todoPage');
+}
+
+// ===== MAIN INPUT =====
+document.getElementById('mainInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && this.value.trim()) {
+    openAddModal(this.value.trim());
+    this.value = '';
+    this.blur();
+    updateActionBtn();
+  }
+});
+
+// ===== DUAL ACTION BUTTON (mic / send) =====
+function updateActionBtn() {
+  const input = document.getElementById('mainInput');
+  const mic = document.getElementById('micIcon');
+  const send = document.getElementById('sendIcon');
+  if (input.value.trim()) {
+    mic.style.display = 'none';
+    send.style.display = '';
+  } else {
+    mic.style.display = '';
+    send.style.display = 'none';
+  }
+}
+
+function handleActionBtn() {
+  const input = document.getElementById('mainInput');
+  if (input.value.trim()) {
+    openAddModal(input.value.trim());
+    input.value = '';
+    input.blur();
+    updateActionBtn();
+  } else {
+    startVoice();
+  }
+}
+
+// ===== VOICE =====
+let recognition = null;
+function startVoice() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert('你的瀏覽器不支援語音輸入');
+    return;
+  }
+  if (!recognition) {
+    recognition = new SpeechRecognition();
+    recognition.lang = 'zh-TW';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    
+    recognition.onresult = (e) => {
+      const text = e.results[0][0].transcript;
+      document.getElementById('mainInput').value = text;
+      openAddModal(text);
+      document.getElementById('mainInput').value = '';
+      updateActionBtn();
+    };
+    recognition.onend = () => {
+      document.getElementById('actionBtn').classList.remove('listening');
+    };
+    recognition.onerror = () => {
+      document.getElementById('actionBtn').classList.remove('listening');
+    };
+  }
+  document.getElementById('actionBtn').classList.add('listening');
+  recognition.start();
+}
+
+// ===== ADD MODAL =====
+function openAddModal(title) {
+  document.getElementById('modalTitle').value = title;
+  document.getElementById('modalDetail').value = '';
+  
+  // Parse time from text
+  const parsed = parseTimeFromText(title);
+  document.getElementById('modalDate').value = parsed.date || '';
+  document.getElementById('modalTime').value = parsed.time || '';
+  updateReminderVisibility();
+  
+  // Reset urgency
+  document.querySelectorAll('#addModal .modal-option[data-urgency]').forEach(el => el.classList.remove('selected'));
+  document.querySelector('#addModal .modal-option[data-urgency="normal"]').classList.add('selected');
+  
+  // Reset reminder
+  document.querySelectorAll('#reminderOptions .modal-option').forEach(el => el.classList.remove('selected'));
+  document.querySelector('#reminderOptions .modal-option[data-remind="0"]').classList.add('selected');
+  
+  // Build categories
+  renderCategoryOptions();
+  
+  document.getElementById('addModal').classList.add('active');
+}
+
+function renderCategoryOptions() {
+  const cats = getCategories();
+  const container = document.getElementById('categoryOptions');
+  container.innerHTML = cats.map((c, i) => 
+    `<div class="modal-option ${i === 0 ? 'selected' : ''}" data-cat="${c.name}" style="border-color:${c.color}" onclick="selectCategory(this)">${c.name}</div>`
+  ).join('') + `<div class="modal-option" onclick="toggleAddTag()" style="border-style:dashed;">＋ 自訂</div>`;
+}
+
+function toggleAddTag() {
+  const el = document.getElementById('addTagInput');
+  el.classList.toggle('show');
+  if (el.classList.contains('show')) document.getElementById('newTagName').focus();
+}
+
+function addCustomTag() {
+  const name = document.getElementById('newTagName').value.trim();
+  if (!name) return;
+  const colors = ['#D4908A', '#9BB09C', '#B8A9C9', '#D4B96A', '#C75C5C', '#5A7A5B'];
+  const cats = getCategories();
+  if (cats.find(c => c.name === name)) { alert('已有此分類'); return; }
+  cats.push({ name, color: colors[cats.length % colors.length] });
+  setData(STORAGE_KEYS.categories, cats);
+  document.getElementById('newTagName').value = '';
+  document.getElementById('addTagInput').classList.remove('show');
+  renderCategoryOptions();
+  // Select the new one
+  const opts = document.querySelectorAll('#categoryOptions .modal-option[data-cat]');
+  opts.forEach(o => o.classList.remove('selected'));
+  opts[opts.length - 1].classList.add('selected');
+}
+
+function selectCategory(el) {
+  if (!el.dataset.cat) return;
+  el.parentElement.querySelectorAll('.modal-option[data-cat]').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function selectUrgency(el) {
+  el.parentElement.querySelectorAll('.modal-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function selectReminder(el) {
+  el.parentElement.querySelectorAll('.modal-option[data-remind]').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+document.getElementById('modalDate').addEventListener('change', updateReminderVisibility);
+document.getElementById('modalTime').addEventListener('change', updateReminderVisibility);
+
+function updateReminderVisibility() {
+  const hasDate = document.getElementById('modalDate').value;
+  const hasTime = document.getElementById('modalTime').value;
+  document.getElementById('reminderOptions').classList.toggle('show', !!(hasDate || hasTime));
+}
+
+function closeAddModal() {
+  document.getElementById('addModal').classList.remove('active');
+}
+
+document.getElementById('addModal').addEventListener('click', function(e) {
+  if (e.target === this) closeAddModal();
+});
+
+function submitTodo() {
+  const title = document.getElementById('modalTitle').value.trim();
+  if (!title) return;
+  
+  const urgencyEl = document.querySelector('#addModal .modal-option[data-urgency].selected');
+  const categoryEl = document.querySelector('#categoryOptions .modal-option[data-cat].selected');
+  const reminderEl = document.querySelector('#reminderOptions .modal-option[data-remind].selected');
+  
+  const todo = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    title,
+    detail: document.getElementById('modalDetail').value.trim(),
+    date: document.getElementById('modalDate').value || null,
+    time: document.getElementById('modalTime').value || null,
+    urgency: urgencyEl ? urgencyEl.dataset.urgency : 'normal',
+    category: categoryEl ? categoryEl.dataset.cat : '個人',
+    remindBefore: reminderEl ? parseInt(reminderEl.dataset.remind) : 0,
+    createdAt: new Date().toISOString()
+  };
+  
+  const todos = getData(STORAGE_KEYS.todos);
+  todos.unshift(todo);
+  setData(STORAGE_KEYS.todos, todos);
+  
+  scheduleNotification(todo);
+  closeAddModal();
+  updateSmartHint();
+  updateRememberCards();
+  
+  // Go to todo page
+  openPage('todoPage');
+}
+
+// ===== TODO LIST RENDER =====
+function renderTodoList() {
+  const container = document.getElementById('todoList');
+  const filterContainer = document.getElementById('todoFilter');
+  const todos = getData(STORAGE_KEYS.todos);
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Filters
+  const cats = ['全部', ...getCategories().map(c => c.name)];
+  filterContainer.innerHTML = cats.map((c, i) => 
+    `<div class="filter-chip ${i === 0 ? 'active' : ''}" onclick="filterTodos(this, '${c}')">${c}</div>`
+  ).join('');
+  
+  if (todos.length === 0) {
+    container.innerHTML = '<div class="todo-empty">目前沒有待辦事項 ✿<br>回首頁新增一個吧！</div>';
+    return;
+  }
+  
+  // Sort: overdue first, then urgent, then by date
+  const sorted = [...todos].sort((a, b) => {
+    const aOverdue = isItemOverdue(a) ? -1 : 0;
+    const bOverdue = isItemOverdue(b) ? -1 : 0;
+    if (aOverdue !== bOverdue) return aOverdue - bOverdue;
+    const urgencyOrder = { urgent: 0, normal: 1, later: 2 };
+    return (urgencyOrder[a.urgency] || 1) - (urgencyOrder[b.urgency] || 1);
+  });
+  
+  container.innerHTML = sorted.map(t => {
+    const overdue = isItemOverdue(t);
+    const urgencyTag = { urgent: '<span class="todo-tag tag-urgent">🔴 緊急</span>', normal: '<span class="todo-tag tag-normal">🟡 還好</span>', later: '<span class="todo-tag tag-later">🔵 有空</span>' };
+    const timeStr = t.date ? `<span class="todo-tag tag-time">${formatDate(t.date)}${t.time ? ' ' + t.time : ''}</span>` : '';
+    const overdueTag = overdue ? '<span class="todo-tag tag-urgent">⏰ 已過提醒時間</span>' : '';
+    
+    return `
+      <div class="todo-item ${overdue ? 'overdue' : ''}" id="todo-${t.id}">
+        <div class="todo-checkbox" onclick="completeTodo('${t.id}')"></div>
+        <div class="todo-body">
+          <div class="todo-title">${escapeHtml(t.title)}</div>
+          ${t.detail ? `<div class="todo-detail">${escapeHtml(t.detail)}</div>` : ''}
+          <div class="todo-meta">
+            ${overdueTag}
+            ${urgencyTag[t.urgency] || ''}
+            <span class="todo-tag tag-category">${t.category || ''}</span>
+            ${timeStr}
+          </div>
+          <div class="todo-item-actions">
+            <button class="todo-action-btn" onclick="editTodo('${t.id}')">編輯</button>
+            <button class="todo-action-btn delete" onclick="deleteTodo('${t.id}')">刪除</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterTodos(el, cat) {
+  el.parentElement.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  
+  const items = document.querySelectorAll('#todoList .todo-item');
+  items.forEach(item => {
+    if (cat === '全部') {
+      item.style.display = '';
+    } else {
+      const catTag = item.querySelector('.tag-category');
+      item.style.display = (catTag && catTag.textContent === cat) ? '' : 'none';
+    }
+  });
+}
+
+function completeTodo(id) {
+  const todos = getData(STORAGE_KEYS.todos);
+  const idx = todos.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  
+  const todo = todos.splice(idx, 1)[0];
+  todo.completedAt = new Date().toISOString();
+  
+  const completed = getData(STORAGE_KEYS.completed);
+  completed.unshift(todo);
+  
+  setData(STORAGE_KEYS.todos, todos);
+  setData(STORAGE_KEYS.completed, completed);
+  
+  // Animate
+  const el = document.getElementById(`todo-${id}`);
+  if (el) {
+    const cb = el.querySelector('.todo-checkbox');
+    cb.classList.add('checked');
+    cb.textContent = '✓';
+    el.classList.add('completing');
+    
+    // Show stamp
+    const stamp = document.getElementById('stampOverlay');
+    stamp.classList.add('show');
+    setTimeout(() => stamp.classList.remove('show'), 700);
+    
+    setTimeout(() => {
+      renderTodoList();
+      updateSmartHint();
+      updateRememberCards();
+    }, 650);
+  }
+}
+
+function deleteTodo(id) {
+  if (!confirm('確定要刪除這個待辦事項嗎？')) return;
+  const todos = getData(STORAGE_KEYS.todos).filter(t => t.id !== id);
+  setData(STORAGE_KEYS.todos, todos);
+  renderTodoList();
+  updateSmartHint();
+  updateRememberCards();
+}
+
+function editTodo(id) {
+  const todos = getData(STORAGE_KEYS.todos);
+  const todo = todos.find(t => t.id === id);
+  if (!todo) return;
+  
+  // Reopen modal with existing data
+  document.getElementById('modalTitle').value = todo.title;
+  document.getElementById('modalTitle').readOnly = false;
+  document.getElementById('modalDetail').value = todo.detail || '';
+  document.getElementById('modalDate').value = todo.date || '';
+  document.getElementById('modalTime').value = todo.time || '';
+  updateReminderVisibility();
+  
+  // Set urgency
+  document.querySelectorAll('#addModal .modal-option[data-urgency]').forEach(el => {
+    el.classList.toggle('selected', el.dataset.urgency === todo.urgency);
+  });
+  
+  // Set reminder
+  document.querySelectorAll('#reminderOptions .modal-option[data-remind]').forEach(el => {
+    el.classList.toggle('selected', parseInt(el.dataset.remind) === (todo.remindBefore || 0));
+  });
+  
+  renderCategoryOptions();
+  document.querySelectorAll('#categoryOptions .modal-option[data-cat]').forEach(el => {
+    el.classList.toggle('selected', el.dataset.cat === todo.category);
+  });
+  
+  // Remove old, will re-add on submit
+  deleteTodoSilent(id);
+  
+  document.getElementById('addModal').classList.add('active');
+}
+
+function deleteTodoSilent(id) {
+  const todos = getData(STORAGE_KEYS.todos).filter(t => t.id !== id);
+  setData(STORAGE_KEYS.todos, todos);
+}
+
+// ===== COMPLETED LIST =====
+function renderCompletedList() {
+  const container = document.getElementById('completedList');
+  const completed = getData(STORAGE_KEYS.completed);
+  
+  if (completed.length === 0) {
+    container.innerHTML = '<div class="todo-empty">還沒有完成的事項 ✿</div>';
+    return;
+  }
+  
+  container.innerHTML = completed.map(t => `
+    <div class="todo-item completed">
+      <div class="todo-checkbox checked" style="opacity:0.5;">✓</div>
+      <div class="todo-body">
+        <div class="todo-title">${escapeHtml(t.title)}</div>
+        <div class="todo-meta">
+          <span class="todo-tag tag-category">${t.category || ''}</span>
+          <span class="todo-tag" style="background:var(--accent-sage-light);color:#5A7A5B;">完成於 ${formatDate(t.completedAt?.split('T')[0])}</span>
+        </div>
+        <div class="todo-item-actions">
+          <button class="todo-action-btn" onclick="restoreTodo('${t.id}')">恢復</button>
+          <button class="todo-action-btn delete" onclick="deleteCompleted('${t.id}')">刪除</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function restoreTodo(id) {
+  const completed = getData(STORAGE_KEYS.completed);
+  const idx = completed.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  const todo = completed.splice(idx, 1)[0];
+  delete todo.completedAt;
+  const todos = getData(STORAGE_KEYS.todos);
+  todos.unshift(todo);
+  setData(STORAGE_KEYS.todos, todos);
+  setData(STORAGE_KEYS.completed, completed);
+  renderCompletedList();
+  updateSmartHint();
+  updateRememberCards();
+}
+
+function deleteCompleted(id) {
+  if (!confirm('確定要刪除嗎？')) return;
+  const completed = getData(STORAGE_KEYS.completed).filter(t => t.id !== id);
+  setData(STORAGE_KEYS.completed, completed);
+  renderCompletedList();
+}
+
+// ===== SHOPPING LIST =====
+function renderShoppingList() {
+  const container = document.getElementById('shoppingList');
+  const items = getData(STORAGE_KEYS.shopping);
+  
+  if (items.length === 0) {
+    container.innerHTML = '<div class="todo-empty">購物清單是空的 ✿</div>';
+    return;
+  }
+  
+  container.innerHTML = items.map(item => `
+    <div class="shopping-item" id="shop-${item.id}">
+      <div class="todo-checkbox" onclick="buyItem('${item.id}')"></div>
+      <span style="font-family:var(--font-hand);font-size:1rem;">${escapeHtml(item.name)}</span>
+    </div>
+  `).join('');
+}
+
+document.getElementById('shoppingInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && this.value.trim()) { addShoppingItem(); }
+});
+
+function addShoppingItem() {
+  const input = document.getElementById('shoppingInput');
+  const name = input.value.trim();
+  if (!name) return;
+  
+  const items = getData(STORAGE_KEYS.shopping);
+  items.push({ id: Date.now().toString(36), name });
+  setData(STORAGE_KEYS.shopping, items);
+  input.value = '';
+  renderShoppingList();
+}
+
+function buyItem(id) {
+  const el = document.getElementById(`shop-${id}`);
+  if (el) {
+    el.querySelector('.todo-checkbox').classList.add('checked');
+    el.querySelector('.todo-checkbox').textContent = '✓';
+    el.classList.add('bought');
+  }
+  setTimeout(() => {
+    const items = getData(STORAGE_KEYS.shopping).filter(i => i.id !== id);
+    setData(STORAGE_KEYS.shopping, items);
+    renderShoppingList();
+  }, 600);
+}
+
+// ===== REPEAT TASKS =====
+function renderRepeatList() {
+  const container = document.getElementById('repeatList');
+  const repeats = getData(STORAGE_KEYS.repeats);
+  
+  if (repeats.length === 0) {
+    container.innerHTML = '<div class="todo-empty">還沒有重複事項 ✿</div>';
+    return;
+  }
+  
+  const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
+  container.innerHTML = repeats.map(r => {
+    let schedule = '';
+    if (r.freq === 'weekly') schedule = `每週${dayNames[r.day]}`;
+    else schedule = `每月 ${r.monthDay} 號`;
+    return `
+      <div class="repeat-item">
+        <div class="repeat-info">
+          <div class="repeat-title">${escapeHtml(r.title)}</div>
+          <div class="repeat-schedule">${schedule}</div>
+        </div>
+        <button class="repeat-delete" onclick="deleteRepeat('${r.id}')">刪除</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function openRepeatModal() {
+  document.getElementById('repeatTitle').value = '';
+  document.getElementById('monthDay').value = '';
+  document.querySelectorAll('#repeatModal .modal-option[data-freq]').forEach(el => el.classList.remove('selected'));
+  document.querySelector('#repeatModal .modal-option[data-freq="weekly"]').classList.add('selected');
+  document.querySelectorAll('#repeatModal .modal-option[data-day]').forEach(el => el.classList.remove('selected'));
+  document.getElementById('weekdayField').style.display = '';
+  document.getElementById('monthdayField').style.display = 'none';
+  document.getElementById('repeatModal').classList.add('active');
+}
+
+document.getElementById('repeatModal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('active');
+});
+
+function selectFreq(el) {
+  el.parentElement.querySelectorAll('.modal-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  const isWeekly = el.dataset.freq === 'weekly';
+  document.getElementById('weekdayField').style.display = isWeekly ? '' : 'none';
+  document.getElementById('monthdayField').style.display = isWeekly ? 'none' : '';
+}
+
+function selectDay(el) {
+  el.parentElement.querySelectorAll('.modal-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function submitRepeat() {
+  const title = document.getElementById('repeatTitle').value.trim();
+  if (!title) return;
+  
+  const freqEl = document.querySelector('#repeatModal .modal-option[data-freq].selected');
+  const freq = freqEl ? freqEl.dataset.freq : 'weekly';
+  
+  const repeat = {
+    id: Date.now().toString(36),
+    title,
+    freq
+  };
+  
+  if (freq === 'weekly') {
+    const dayEl = document.querySelector('#repeatModal .modal-option[data-day].selected');
+    if (!dayEl) { alert('請選擇星期幾'); return; }
+    repeat.day = parseInt(dayEl.dataset.day);
+  } else {
+    const md = parseInt(document.getElementById('monthDay').value);
+    if (!md || md < 1 || md > 31) { alert('請輸入 1-31 的日期'); return; }
+    repeat.monthDay = md;
+  }
+  
+  const repeats = getData(STORAGE_KEYS.repeats);
+  repeats.push(repeat);
+  setData(STORAGE_KEYS.repeats, repeats);
+  
+  document.getElementById('repeatModal').classList.remove('active');
+  renderRepeatList();
+}
+
+function deleteRepeat(id) {
+  if (!confirm('確定要刪除這個重複事項嗎？')) return;
+  const repeats = getData(STORAGE_KEYS.repeats).filter(r => r.id !== id);
+  setData(STORAGE_KEYS.repeats, repeats);
+  renderRepeatList();
+}
+
+// Check and generate repeat tasks
+function processRepeats() {
+  const repeats = getData(STORAGE_KEYS.repeats);
+  const todos = getData(STORAGE_KEYS.todos);
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  
+  repeats.forEach(r => {
+    let shouldAdd = false;
+    if (r.freq === 'weekly' && today.getDay() === r.day) shouldAdd = true;
+    if (r.freq === 'monthly' && today.getDate() === r.monthDay) shouldAdd = true;
+    
+    if (shouldAdd) {
+      const exists = todos.find(t => t.title === r.title && t.date === todayStr && t.fromRepeat);
+      if (!exists) {
+        todos.unshift({
+          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+          title: r.title,
+          detail: '',
+          date: todayStr,
+          time: null,
+          urgency: 'normal',
+          category: '個人',
+          remindBefore: 0,
+          fromRepeat: true,
+          createdAt: new Date().toISOString()
+        });
+      }
+    }
+  });
+  setData(STORAGE_KEYS.todos, todos);
+}
+
+// ===== BOOK COVER =====
+function openBook() {
+  const book = document.getElementById('standingBook');
+  const overlay = document.getElementById('bookOverlay');
+  book.classList.add('flipping');
+  setTimeout(() => {
+    overlay.classList.add('hidden');
+  }, 400);
+}
+
+// ===== PAGE NAVIGATION =====
+function openPage(pageId) {
+  document.getElementById(pageId).classList.add('active');
+  if (pageId === 'todoPage') renderTodoList();
+  if (pageId === 'completedPage') renderCompletedList();
+  if (pageId === 'shoppingPage') renderShoppingList();
+  if (pageId === 'repeatPage') renderRepeatList();
+}
+
+function closePage(pageId) {
+  const page = document.getElementById(pageId);
+  page.classList.remove('active');
+  page.classList.add('closing');
+  
+  setTimeout(() => {
+    page.classList.remove('closing');
+    updateSmartHint();
+    updateRememberCards();
+  }, 500);
+}
+
+// ===== ADD TODO FROM TODO PAGE =====
+function openAddFromTodo() {
+  // Create a temporary input modal
+  const input = document.createElement('div');
+  input.className = 'modal-overlay active';
+  input.id = 'quickAddOverlay';
+  input.innerHTML = `
+    <div class="modal" style="padding:20px 20px 30px;">
+      <div class="modal-handle"></div>
+      <div class="modal-title" style="font-size:1.1rem;">✿ 快速新增</div>
+      <div class="search-box" style="margin:12px 0 0;">
+        <input type="text" class="search-input" id="quickAddInput" placeholder="現在要做什麼？" enterkeyhint="done" autofocus style="border-radius:var(--radius-sm);">
+      </div>
+    </div>
+  `;
+  input.addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.remove();
+    }
+  });
+  document.body.appendChild(input);
+  
+  setTimeout(() => {
+    const qi = document.getElementById('quickAddInput');
+    qi.focus();
+    qi.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && this.value.trim()) {
+        const val = this.value.trim();
+        document.getElementById('quickAddOverlay').remove();
+        openAddModal(val);
+      }
+    });
+  }, 100);
+}
+
+// ===== WEATHER =====
+async function loadWeather() {
+  const cities = [
+    { name: 'Taipei', key: 'Taipei', prefix: 'Taipei', label: '台北' },
+    { name: 'Zhonghe', key: 'Zhonghe,New+Taipei', prefix: 'Zhonghe', label: '中和' }
+  ];
+  
+  // English to Chinese + icon mapping
+  const weatherMap = {
+    'Sunny': { zh: '晴天', icon: '☀️' },
+    'Clear': { zh: '晴朗', icon: '🌙' },
+    'Partly cloudy': { zh: '晴時多雲', icon: '⛅' },
+    'Partly Cloudy': { zh: '晴時多雲', icon: '⛅' },
+    'Cloudy': { zh: '多雲', icon: '☁️' },
+    'Overcast': { zh: '陰天', icon: '☁️' },
+    'Mist': { zh: '薄霧', icon: '🌫️' },
+    'Fog': { zh: '霧', icon: '🌫️' },
+    'Light drizzle': { zh: '小毛雨', icon: '🌦️' },
+    'Patchy rain possible': { zh: '可能有零星雨', icon: '🌦️' },
+    'Patchy rain nearby': { zh: '附近有零星雨', icon: '🌦️' },
+    'Patchy light rain': { zh: '零星小雨', icon: '🌦️' },
+    'Light rain': { zh: '小雨', icon: '🌦️' },
+    'Light rain shower': { zh: '短暫小雨', icon: '🌦️' },
+    'Moderate rain at times': { zh: '間歇中雨', icon: '🌧️' },
+    'Moderate rain': { zh: '中雨', icon: '🌧️' },
+    'Heavy rain at times': { zh: '間歇大雨', icon: '🌧️' },
+    'Heavy rain': { zh: '大雨', icon: '🌧️' },
+    'Moderate or heavy rain shower': { zh: '中到大陣雨', icon: '🌧️' },
+    'Torrential rain shower': { zh: '暴雨', icon: '🌧️' },
+    'Patchy light rain with thunder': { zh: '零星雷陣雨', icon: '⛈️' },
+    'Moderate or heavy rain with thunder': { zh: '雷陣雨', icon: '⛈️' },
+    'Thundery outbreaks possible': { zh: '可能有雷陣雨', icon: '⛈️' },
+    'Light snow': { zh: '小雪', icon: '🌨️' },
+    'Snow': { zh: '雪', icon: '🌨️' }
+  };
+  
+  const rainKeywords = ['rain', 'Rain', 'drizzle', 'Drizzle', 'shower', 'Shower', 'thunder', 'Thunder'];
+  let hasRain = false;
+  let rainCities = [];
+  
+  for (const city of cities) {
+    try {
+      // No lang param = raw English keys, easier to parse
+      const resp = await fetch(`https://wttr.in/${city.key}?format=j1`);
+      const data = await resp.json();
+      const current = data.current_condition[0];
+      
+      const temp = current.temp_C;
+      const descEn = current.weatherDesc[0].value;
+      // Try exact match first, then case-insensitive
+      let mapped = weatherMap[descEn];
+      if (!mapped) {
+        const lowerDesc = descEn.toLowerCase();
+        const foundKey = Object.keys(weatherMap).find(k => k.toLowerCase() === lowerDesc);
+        mapped = foundKey ? weatherMap[foundKey] : { zh: descEn, icon: '🌤️' };
+      }
+      
+      document.getElementById(`weatherIcon${city.prefix}`).textContent = mapped.icon;
+      document.getElementById(`weatherTemp${city.prefix}`).textContent = `${temp}°C`;
+      document.getElementById(`weatherDesc${city.prefix}`).textContent = mapped.zh;
+      
+      // Check rain in current weather
+      const isRaining = rainKeywords.some(k => descEn.includes(k));
+      
+      // Check hourly forecast for rain chance >= 50%
+      let forecastRain = false;
+      if (data.weather && data.weather[0] && data.weather[0].hourly) {
+        forecastRain = data.weather[0].hourly.some(h => {
+          const chance = parseInt(h.chanceofrain) || 0;
+          return chance >= 50;
+        });
+      }
+      
+      if (isRaining || forecastRain) {
+        hasRain = true;
+        rainCities.push(city.label);
+      }
+    } catch (e) {
+      document.getElementById(`weatherTemp${city.prefix}`).textContent = '--°C';
+      document.getElementById(`weatherDesc${city.prefix}`).textContent = '載入失敗';
+    }
+  }
+  
+  // Show rain alert
+  if (hasRain) {
+    const alertEl = document.getElementById('rainAlert');
+    if (rainCities.length === 2) {
+      alertEl.textContent = '🌂 台北和中和今天可能會下雨，記得帶傘！';
+    } else {
+      alertEl.textContent = `🌂 ${rainCities[0]}今天可能會下雨，記得帶傘！`;
+    }
+    alertEl.classList.add('show');
+  }
+}
+
+// ===== HELPERS =====
+function isItemOverdue(t) {
+  if (!t.date) return false;
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
+  // Past date = definitely overdue
+  if (t.date < today) return true;
+  // Today but has time set and time has passed
+  if (t.date === today && t.time) {
+    const [h, m] = t.time.split(':').map(Number);
+    const targetTime = new Date(now);
+    targetTime.setHours(h, m, 0, 0);
+    return now > targetTime;
+  }
+  return false;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+  return `${m}/${day}（${weekdays[d.getDay()]}）`;
+}
+
+// ===== SERVICE WORKER =====
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(err => console.log('SW reg failed:', err));
+}
+
+// ===== INIT =====
+function init() {
+  processRepeats();
+  updateSmartHint();
+  updateRememberCards();
+  loadWeather();
+  checkNotifPermission();
+  rescheduleAllNotifications();
+}
+
+init();
+</script>
+</body>
+</html>

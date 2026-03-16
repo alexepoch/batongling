@@ -1,0 +1,22 @@
+{
+  "name": "小巴彤羚秘書 — 你的手帳待辦本",
+  "short_name": "小巴彤羚秘書",
+  "description": "手帳風格的待辦事項秘書",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#F5EDE3",
+  "theme_color": "#F5EDE3",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
