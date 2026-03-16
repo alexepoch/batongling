@@ -2547,7 +2547,19 @@ function formatDate(dateStr) {
 
 // ===== SERVICE WORKER =====
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(err => console.log('SW reg failed:', err));
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    // 每次開啟 App 自動檢查更新
+    reg.update();
+    // 偵測到新版 SW 時自動重載頁面
+    reg.addEventListener('updatefound', () => {
+      const newSW = reg.installing;
+      newSW.addEventListener('statechange', () => {
+        if (newSW.state === 'activated') {
+          window.location.reload();
+        }
+      });
+    });
+  }).catch(err => console.log('SW reg failed:', err));
 }
 
 // ===== INIT =====
