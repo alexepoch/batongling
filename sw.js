@@ -1,4 +1,4 @@
-const CACHE_NAME = 'secretary-v2';
+const CACHE_NAME = 'secretary-v3';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -23,19 +23,19 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch - offline first
+// Fetch - network first (ensures updates are seen immediately)
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(response => {
-      if (response) return response;
-      return fetch(event.request).then(fetchResponse => {
-        if (fetchResponse && fetchResponse.status === 200) {
-          const clone = fetchResponse.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-        }
-        return fetchResponse;
-      }).catch(() => {
-        // Offline fallback
+    fetch(event.request).then(fetchResponse => {
+      if (fetchResponse && fetchResponse.status === 200) {
+        const clone = fetchResponse.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+      }
+      return fetchResponse;
+    }).catch(() => {
+      // Offline fallback - use cache when network unavailable
+      return caches.match(event.request).then(response => {
+        if (response) return response;
         if (event.request.destination === 'document') {
           return caches.match('/index.html');
         }
