@@ -81,7 +81,7 @@ body::after {
   width: 100%;
 }
 
-/* ===== BOOK COVER OVERLAY ===== */
+/* ===== GOLD INGOT COVER OVERLAY ===== */
 .book-cover-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -98,105 +98,67 @@ body::after {
   pointer-events: none;
 }
 
-/* The 3D standing book */
+/* Gold ingot container */
 .standing-book {
   position: relative;
-  width: 240px;
-  height: 340px;
+  width: 280px;
+  height: 240px;
   cursor: pointer;
-  perspective: 1000px;
   margin-bottom: 20px;
+  transition: transform 0.6s ease;
+}
+.standing-book:hover {
+  transform: scale(1.03);
 }
 
-.standing-book-cover {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(145deg, #8B6F5E 0%, #6B5245 40%, #5A4538 100%);
-  border-radius: 4px 14px 14px 4px;
-  box-shadow:
-    -3px 0 0 #4A3728,
-    -5px 1px 0 #3D2E20,
-    -7px 2px 0 #362A1C,
-    -9px 3px 0 #30241A,
-    0 8px 30px rgba(74, 55, 40, 0.35),
-    inset 0 0 30px rgba(0,0,0,0.12);
-  overflow: hidden;
-  transform-origin: left center;
-  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 2;
+/* The ingot SVG shape */
+.ingot-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 8px 24px rgba(180, 140, 20, 0.35))
+          drop-shadow(0 2px 6px rgba(120, 90, 10, 0.25));
 }
 
-/* Leather texture */
-.standing-book-cover::after {
-  content: '';
+/* Shimmer animation on ingot */
+.ingot-shimmer {
+  animation: shimmer 3s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.4; }
+}
+
+/* Floating animation */
+.standing-book {
+  animation: ingotFloat 3s ease-in-out infinite;
+}
+@keyframes ingotFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.standing-book:hover {
+  animation-play-state: paused;
+  transform: scale(1.03);
+}
+
+/* Text overlay on the ingot */
+.ingot-text-overlay {
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 128 128' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -35%);
+  text-align: center;
+  z-index: 4;
   pointer-events: none;
 }
 
-/* Spine shadow */
-.standing-book-cover::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0;
-  width: 18px;
-  height: 100%;
-  background: linear-gradient(to right, rgba(0,0,0,0.22), rgba(0,0,0,0.06) 50%, rgba(255,255,255,0.04) 70%, transparent);
-  z-index: 3;
-}
-
-/* Pages stack visible from left */
-.standing-book-pages {
-  position: absolute;
-  top: 5px; bottom: 5px; left: -8px;
-  width: 8px;
-  background: linear-gradient(to right, #C8BBA8, #D4C8B8 2px, #E0D5C5 4px, #E8DDD0 6px, #F0E8DC);
-  border-radius: 2px 0 0 2px;
-  z-index: 1;
-  box-shadow: -1px 0 3px rgba(74,55,40,0.1);
-}
-
-/* Pages visible from bottom */
-.standing-book-bottom {
-  position: absolute;
-  bottom: -4px; left: -6px; right: 4px;
-  height: 4px;
-  background: linear-gradient(to bottom, #E0D5C5, #D4C8B8);
-  border-radius: 0 0 2px 2px;
-  z-index: 0;
-}
-
-/* Gold frame on cover */
-.cover-frame {
-  position: absolute;
-  top: 28px; left: 28px; right: 18px; bottom: 28px;
-  border: 1.5px solid rgba(212, 185, 106, 0.3);
-  border-radius: 6px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 4;
-}
-.cover-frame::before, .cover-frame::after {
-  content: '✿';
-  position: absolute;
-  color: rgba(212, 185, 106, 0.35);
-  font-size: 0.75rem;
-  left: 50%;
-  transform: translateX(-50%);
-}
-.cover-frame::before { top: -7px; }
-.cover-frame::after { bottom: -7px; }
-
 .cover-title {
   font-family: var(--font-hand);
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: rgba(212, 185, 106, 0.8);
+  color: #7A5A1A;
   letter-spacing: 3px;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  text-shadow: 0 1px 2px rgba(255,230,130,0.6), 0 -1px 1px rgba(100,70,10,0.2);
   text-align: center;
   line-height: 1.5;
 }
@@ -204,21 +166,40 @@ body::after {
 .cover-subtitle {
   font-family: var(--font-hand);
   font-size: 0.8rem;
-  color: rgba(212, 185, 106, 0.4);
-  margin-top: 8px;
+  color: #9B7A2A;
+  margin-top: 4px;
   letter-spacing: 2px;
+  text-shadow: 0 1px 1px rgba(255,230,130,0.4);
 }
 
-.cover-flower {
-  margin: 14px auto 0;
-  display: block;
-  opacity: 0.45;
+/* Open animation — glow and shrink */
+.standing-book.flipping {
+  animation: ingotOpen 0.8s ease forwards;
+}
+@keyframes ingotOpen {
+  0% { transform: scale(1); opacity: 1; filter: brightness(1); }
+  40% { transform: scale(1.15); opacity: 1; filter: brightness(1.5); }
+  100% { transform: scale(0.3); opacity: 0; filter: brightness(2); }
 }
 
-/* Flip animation */
-.standing-book.flipping .standing-book-cover {
-  transform: rotateY(-160deg);
-  box-shadow: none;
+/* Sparkle particles around the ingot */
+.ingot-sparkle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #FFE882, transparent);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: sparkle 2s ease-in-out infinite;
+}
+.ingot-sparkle:nth-child(1) { top: 10%; left: 5%; animation-delay: 0s; }
+.ingot-sparkle:nth-child(2) { top: 5%; right: 10%; animation-delay: 0.7s; }
+.ingot-sparkle:nth-child(3) { bottom: 25%; left: 8%; animation-delay: 1.3s; }
+.ingot-sparkle:nth-child(4) { bottom: 20%; right: 5%; animation-delay: 0.4s; }
+.ingot-sparkle:nth-child(5) { top: 25%; left: 50%; animation-delay: 1s; }
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 1; transform: scale(1.2); }
 }
 
 /* Tap hint below the book */
@@ -1224,31 +1205,80 @@ body::after {
 <div class="book-cover-overlay" id="bookOverlay">
   <div class="cover-bg-decor">
     <svg width="100%" height="100%" style="position:absolute;top:0;left:0;">
-      <circle cx="15%" cy="20%" r="80" fill="rgba(212,144,138,0.08)"/>
-      <circle cx="85%" cy="25%" r="60" fill="rgba(184,169,201,0.07)"/>
-      <circle cx="20%" cy="80%" r="70" fill="rgba(155,176,156,0.06)"/>
-      <circle cx="80%" cy="85%" r="50" fill="rgba(212,185,106,0.05)"/>
+      <circle cx="15%" cy="20%" r="80" fill="rgba(212,185,106,0.07)"/>
+      <circle cx="85%" cy="25%" r="60" fill="rgba(218,165,32,0.06)"/>
+      <circle cx="20%" cy="80%" r="70" fill="rgba(245,212,90,0.05)"/>
+      <circle cx="80%" cy="85%" r="50" fill="rgba(200,149,30,0.06)"/>
     </svg>
   </div>
   <div class="standing-book" id="standingBook" onclick="openBook()">
-    <div class="standing-book-cover">
-      <div class="cover-frame">
-        <div class="cover-title">小巴彤羚<br>秘書</div>
-        <div class="cover-subtitle">你的手帳待辦本</div>
-        <svg class="cover-flower" width="60" height="40" viewBox="0 0 60 40" fill="none">
-          <ellipse cx="30" cy="20" rx="8" ry="10" fill="rgba(212,185,106,0.3)" transform="rotate(-30 30 20)"/>
-          <ellipse cx="30" cy="20" rx="8" ry="10" fill="rgba(212,185,106,0.25)" transform="rotate(30 30 20)"/>
-          <ellipse cx="30" cy="20" rx="8" ry="10" fill="rgba(212,185,106,0.2)" transform="rotate(90 30 20)"/>
-          <ellipse cx="30" cy="20" rx="8" ry="10" fill="rgba(212,185,106,0.2)"/>
-          <ellipse cx="30" cy="20" rx="8" ry="10" fill="rgba(212,185,106,0.25)" transform="rotate(60 30 20)"/>
-          <circle cx="30" cy="20" r="4" fill="rgba(212,185,106,0.5)"/>
-        </svg>
-      </div>
-    </div>
-    <div class="standing-book-pages"></div>
-    <div class="standing-book-bottom"></div>
+    <!-- Sparkle particles -->
+    <div class="ingot-sparkle"></div>
+    <div class="ingot-sparkle"></div>
+    <div class="ingot-sparkle"></div>
+    <div class="ingot-sparkle"></div>
+    <div class="ingot-sparkle"></div>
+    <!-- Gold ingot SVG -->
+    <svg class="ingot-svg" viewBox="0 0 280 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Main gold gradient -->
+        <linearGradient id="ingotGold" x1="0" y1="0" x2="280" y2="220" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#FFF2B0"/>
+          <stop offset="20%" stop-color="#F5D45A"/>
+          <stop offset="45%" stop-color="#DAA520"/>
+          <stop offset="65%" stop-color="#F5D45A"/>
+          <stop offset="85%" stop-color="#C8951E"/>
+          <stop offset="100%" stop-color="#B8860B"/>
+        </linearGradient>
+        <!-- Top face gradient (lighter) -->
+        <linearGradient id="ingotTop" x1="60" y1="30" x2="220" y2="90" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#FFF8D0"/>
+          <stop offset="30%" stop-color="#FFE87A"/>
+          <stop offset="70%" stop-color="#F0C830"/>
+          <stop offset="100%" stop-color="#DAA520"/>
+        </linearGradient>
+        <!-- Highlight shimmer -->
+        <linearGradient id="ingotShimmer" x1="0" y1="0" x2="280" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="white" stop-opacity="0"/>
+          <stop offset="45%" stop-color="white" stop-opacity="0"/>
+          <stop offset="50%" stop-color="white" stop-opacity="0.4"/>
+          <stop offset="55%" stop-color="white" stop-opacity="0"/>
+          <stop offset="100%" stop-color="white" stop-opacity="0"/>
+        </linearGradient>
+        <!-- Shadow gradient for depth -->
+        <radialGradient id="ingotShadow" cx="50%" cy="90%" r="50%">
+          <stop offset="0%" stop-color="#8B6914" stop-opacity="0.4"/>
+          <stop offset="100%" stop-color="#8B6914" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <!-- Main body of the ingot (boat shape) -->
+      <path d="M50,170 Q30,170 25,155 L55,75 Q60,60 75,55 L205,55 Q220,60 225,75 L255,155 Q250,170 230,170 Z"
+            fill="url(#ingotGold)" stroke="#B8860B" stroke-width="1"/>
+      <!-- Top curved rim -->
+      <path d="M55,75 Q60,60 75,55 L205,55 Q220,60 225,75 L215,85 Q210,72 200,68 L80,68 Q70,72 65,85 Z"
+            fill="url(#ingotTop)" stroke="#C8951E" stroke-width="0.5"/>
+      <!-- Raised center top (the curved top bump of yuanbao) -->
+      <path d="M90,55 Q100,20 140,15 Q180,20 190,55"
+            fill="url(#ingotTop)" stroke="#C8951E" stroke-width="0.8"/>
+      <path d="M95,55 Q105,25 140,20 Q175,25 185,55"
+            fill="url(#ingotShimmer)" class="ingot-shimmer"/>
+      <!-- Front face highlight -->
+      <path d="M55,75 L65,85 Q67,130 75,165 L50,170 Q30,170 25,155 L55,75 Z"
+            fill="rgba(255,255,255,0.08)"/>
+      <!-- Right side shadow -->
+      <path d="M225,75 L215,85 Q213,130 205,165 L230,170 Q250,170 255,155 L225,75 Z"
+            fill="rgba(0,0,0,0.08)"/>
+      <!-- Inner face -->
+      <path d="M65,85 L215,85 Q213,130 205,165 L75,165 Q67,130 65,85 Z"
+            fill="url(#ingotGold)" opacity="0.9"/>
+      <!-- Shimmer overlay on body -->
+      <path d="M50,170 Q30,170 25,155 L55,75 Q60,60 75,55 L205,55 Q220,60 225,75 L255,155 Q250,170 230,170 Z"
+            fill="url(#ingotShimmer)" class="ingot-shimmer"/>
+      <!-- Bottom shadow -->
+      <ellipse cx="140" cy="175" rx="100" ry="8" fill="url(#ingotShadow)"/>
+    </svg>
   </div>
-  <div class="cover-tap-hint">輕觸翻開 ✿</div>
+  <div class="cover-tap-hint">輕觸招財 ✦</div>
 </div>
 
 <!-- Inner page background (clean watercolor paper) -->
