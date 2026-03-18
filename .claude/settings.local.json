@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Claude_Preview__preview_start",
+      "Bash(where python:*)",
+      "Bash(\"C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\Microsoft\\\\WindowsApps\\\\python.exe\" --version)",
+      "Bash(where node:*)",
+      "Bash(where npm:*)",
+      "Bash(where npx:*)",
+      "WebFetch(domain:friendly-malasada-f5e01d.netlify.app)",
+      "WebFetch(domain:69b81c61edd7cb14489408ed--friendly-malasada-f5e01d.netlify.app)",
+      "Bash(npx netlify-cli:*)",
+      "WebSearch",
+      "mcp__c1fc4002-5f49-5f9d-a4e5-93c4ef5d6a75__google_drive_search",
+      "Read(//c/Users/User/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/352bd698-2606-497f-8fd4-e300ce896231/f2059b31-8da2-4ea2-bd98-af15c74aa053/skills/docx/**)",
+      "Bash(pandoc \"C:/Users/User/Desktop/房產管理/租約範本/不動產租賃契約書 範本.docx\" -o /tmp/contract_template.md)",
+      "Read(//tmp/**)",
+      "Bash(python scripts/office/unpack.py \"C:/Users/User/Desktop/房產管理/租約範本/不動產租賃契約書 範本.docx\" /tmp/contract_unpacked/)",
+      "Bash(python \"C:\\\\Users\\\\User\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\352bd698-2606-497f-8fd4-e300ce896231\\\\f2059b31-8da2-4ea2-bd98-af15c74aa053\\\\skills\\\\docx\\\\scripts\\\\office\\\\unpack.py\" \"C:/Users/User/Desktop/房產管理/租約範本/不動產租賃契約書 範本.docx\" /tmp/contract_unpacked/)",
+      "Bash(sort -k6,7)",
+      "Bash(rm \"不動產租賃契約書 \\(1\\).docx\")",
+      "Bash(rm \"不動產租賃契約書.docx\")",
+      "Bash(rm \"不動產租賃契約書.pdf\")",
+      "Bash(rm \"不動產租賃契約書_套房 \\(1\\).docx\")",
+      "Bash(rm \"不動產租賃契約書_套房.docx\")",
+      "Bash(npm --version)",
+      "Bash(powershell -Command \":*)",
+      "Bash(find C:UsersUserDesktop房產管理租約範本 -name *.docx -type f)",
+      "Bash(grep -v '^\\\\s*$')",
+      "Bash(/tmp/final_analysis.sh:*)",
+      "Bash(__NEW_LINE_348f02c0b6bc4363__ chmod:*)",
+      "Bash(/tmp/final_analysis.sh)",
+      "Bash(__NEW_LINE_fef71bccb45f6831__ echo:*)",
+      "Bash(cat:*)",
+      "Bash(ls -lh C:/Users/User/Desktop/rental-manager*.html)",
+      "Bash(npx -y http-server --version)",
+      "Bash(ls \"C:/Users/User/Desktop/\"*敬語*)"
+    ]
+  }
+}

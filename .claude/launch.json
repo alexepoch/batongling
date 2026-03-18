@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "static",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["-e", "require('http').createServer((q,r)=>{require('fs').readFile('index.html',(e,d)=>{r.writeHead(200,{'Content-Type':'text/html'});r.end(d)})}).listen(3000)"],
+      "port": 3000
+    },
+    {
+      "name": "lease-gen",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["-e", "const http=require('http'),fs=require('fs'),path=require('path');const root='C:/Users/User/Desktop/Projects/租屋系統';const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.pdf':'application/pdf'};http.createServer((req,res)=>{let fp=path.join(root,decodeURIComponent(req.url==='/'?'/租約產生器.html':req.url));fs.readFile(fp,(e,d)=>{if(e){res.writeHead(404);res.end('Not found');}else{const ext=path.extname(fp);res.writeHead(200,{'Content-Type':mime[ext]||'text/html','Cache-Control':'no-store'});res.end(d);}});}).listen(8090,()=>console.log('Server on 8090'));"],
+      "port": 8090
+    }
+  ]
+}
