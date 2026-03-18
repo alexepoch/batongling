@@ -777,26 +777,26 @@ async function loadContracts() {
 async function viewSigned(id) {
   const { data, error } = await sb.from('contracts').select('*').eq('id', id).single();
   if (error || !data) { alert('無法載入合約'); return; }
-  const signedAt = data.signed_at ? new Date(data.signed_at).toLocaleDateString('zh-TW') : '';
-  let signatureHtml = '';
-  if (data.signature_data) {
-    signatureHtml = `
-<div style="page-break-before:always">
-  <div style="font-size:16pt;font-weight:700;text-align:center;margin-bottom:24pt">電子簽名紀錄</div>
-  <div style="margin-bottom:16pt;line-height:2">
-    <div><strong>承租人：</strong>${data.tenant_name || ''}</div>
-    <div><strong>租賃地址：</strong>${data.property_addr || ''}</div>
-    <div><strong>簽名時間：</strong>${signedAt}</div>
-    <div><strong>合約類型：</strong>${data.contract_type || ''}</div>
-  </div>
-  <div style="margin-top:24pt">
-    <div style="font-weight:700;margin-bottom:8pt">承租人手寫簽名：</div>
-    <img src="${data.signature_data}" style="max-width:300pt;border:1px solid #ccc;border-radius:4pt" alt="簽名">
-  </div>
-</div>`;
-  }
   const pa = document.getElementById('print-area');
-  pa.innerHTML = data.contract_html + signatureHtml;
+  pa.innerHTML = data.contract_html;
+  // 把簽名圖嵌入到合約簽章欄和生活公約簽名處
+  if (data.signature_data) {
+    const sigImg = `<img src="${data.signature_data}" style="max-width:150pt;max-height:60pt;vertical-align:middle;margin-left:8pt" alt="簽名">`;
+    // 1. 合約簽章欄：找「乙方（承租人）」那行，在（簽章）後加簽名圖
+    const signLines = pa.querySelectorAll('.p-sign-line');
+    signLines.forEach(line => {
+      if (line.textContent.includes('乙方') && line.textContent.includes('簽章')) {
+        line.innerHTML = line.innerHTML.replace('（簽章）', '（簽章）' + sigImg);
+      }
+    });
+    // 2. 生活公約：找「承租人簽名」那行，在名字後加簽名圖
+    const covDivs = pa.querySelectorAll('div');
+    covDivs.forEach(div => {
+      if (div.style.fontWeight === '700' && div.textContent.includes('承租人簽名')) {
+        div.innerHTML = div.innerHTML + sigImg;
+      }
+    });
+  }
   const imgs = pa.querySelectorAll('img');
   await Promise.all(Array.from(imgs).map(i => i.complete ? Promise.resolve() : new Promise(r => { i.onload=r; i.onerror=r; })));
   setTimeout(() => window.print(), 300);
