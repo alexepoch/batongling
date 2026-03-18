@@ -765,9 +765,11 @@ async function loadContracts() {
       ? '<span class="status-badge status-signed">已簽名</span>'
       : '<span class="status-badge status-pending">待簽名</span>';
     const date = new Date(c.created_at).toLocaleDateString('zh-TW');
-    const action = isSigned
-      ? `<button class="btn" style="font-size:11px;padding:4px 12px" onclick="viewSigned('${c.id}')">下載 PDF</button>`
-      : `<span style="font-size:11px;color:var(--mu)">等待中</span>`;
+    const dlBtn = isSigned
+      ? `<button class="btn" style="font-size:11px;padding:4px 12px" onclick="viewSigned('${c.id}')">下載 PDF</button> `
+      : `<span style="font-size:11px;color:var(--mu)">等待中</span> `;
+    const delBtn = `<button class="btn" style="font-size:11px;padding:4px 10px;color:var(--rd);border-color:var(--rd)" onclick="delContract('${c.id}','${(c.tenant_name||'').replace(/'/g,'\\&#39;')}')">刪除</button>`;
+    const action = dlBtn + delBtn;
     return `<tr><td>${c.tenant_name||'-'}</td><td>${c.property_addr||'-'}</td><td>${badge}</td><td>${date}</td><td>${action}</td></tr>`;
   }).join('');
   document.getElementById('esignStatus').style.display = 'block';
@@ -818,6 +820,14 @@ async function viewSigned(id) {
   const imgs = pa.querySelectorAll('img');
   await Promise.all(Array.from(imgs).map(i => i.complete ? Promise.resolve() : new Promise(r => { i.onload=r; i.onerror=r; })));
   setTimeout(() => window.print(), 300);
+}
+
+/* === 刪除簽約紀錄 === */
+async function delContract(id, name) {
+  if (!confirm('確定要刪除「' + (name || '此筆') + '」的簽約紀錄嗎？\n\n刪除後無法復原。')) return;
+  const { error } = await sb.from('contracts').delete().eq('id', id);
+  if (error) { alert('刪除失敗：' + error.message); return; }
+  loadContracts();
 }
 
 // 頁面載入時檢查是否有簽約紀錄
