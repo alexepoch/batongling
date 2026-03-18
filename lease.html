@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>租約產生器</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;600;700&family=Noto+Sans+TC:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#f4f0e8;--sf:#fdfaf3;--sf2:#ece8de;--bd:#d8d3c8;--tx:#28241e;--mu:#7a7468;--ac:#8b6840;--al:#c4a070;--gn:#3d7a52;--gl:#d0eadb;--rd:#8b3535;--rl:#f0d5d5;--sh:0 2px 20px rgba(40,36,30,.07);--r:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;font-size:14px}
+.header{background:var(--sf);border-bottom:1px solid var(--bd);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.h-left{display:flex;align-items:center;gap:14px}
+.h-title{font-family:'Noto Serif TC',serif;font-size:19px;font-weight:300;letter-spacing:.08em}
+.h-sub{font-size:10px;color:var(--al);font-family:'DM Mono',monospace;letter-spacing:.1em;margin-top:2px}
+.h-actions{display:flex;gap:8px}
+.container{max-width:820px;margin:0 auto;padding:24px 20px 80px}
+.type-toggle{display:flex;background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-bottom:20px}
+.type-btn{flex:1;padding:14px;text-align:center;cursor:pointer;font-size:14px;font-weight:500;transition:all .2s;border:none;background:transparent;color:var(--mu)}
+.type-btn.active{background:var(--ac);color:#fff}
+.type-btn:hover:not(.active){background:var(--sf)}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:22px;box-shadow:var(--sh);margin-bottom:16px}
+.card-title{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mu);margin-bottom:16px;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:8px}
+.card-title::before{content:'';width:3px;height:14px;background:var(--ac);border-radius:2px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-row.full{grid-template-columns:1fr}
+.form-row.tri{grid-template-columns:1fr 1fr 1fr}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:11px;color:var(--mu);font-weight:500}
+.form-group input,.form-group select,.form-group textarea{padding:10px 12px;border:1px solid var(--bd);border-radius:8px;font-size:14px;font-family:inherit;background:#fff;transition:border-color .2s;outline:none}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--ac)}
+.form-group textarea{resize:vertical;min-height:60px}
+.form-group input[readonly]{background:var(--sf2);color:var(--mu)}
+.form-group select{cursor:pointer;appearance:auto}
+.date-wrap{position:relative}
+.date-wrap input[type=text]{padding-right:36px}
+.date-wrap .cal-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:var(--ac);padding:4px}
+.date-wrap .cal-btn:hover{color:var(--tx)}
+.date-wrap input[type=date]{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
+.radio-group{display:flex;gap:16px;align-items:center;padding:8px 0}
+.radio-group label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;font-weight:500;color:var(--tx)}
+.radio-group input[type=radio]{accent-color:var(--ac);width:16px;height:16px;cursor:pointer}
+.photo-zone{display:flex;gap:16px;flex-wrap:wrap}
+.photo-box{width:260px;border:2px dashed var(--bd);border-radius:var(--r);padding:16px;text-align:center;position:relative;background:#fff;cursor:pointer;transition:border-color .2s}
+.photo-box:hover{border-color:var(--ac)}
+.photo-box.has-img{border-style:solid;border-color:var(--gn)}
+.photo-box .label{font-size:12px;color:var(--mu);margin-bottom:8px}
+.photo-box .placeholder{font-size:32px;color:var(--bd);line-height:1}
+.photo-box .hint{font-size:10px;color:var(--al);margin-top:6px}
+.photo-box img{max-width:100%;max-height:200px;border-radius:6px;object-fit:contain}
+.photo-box input[type=file]{display:none}
+.photo-box .del-btn{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;background:var(--rd);color:#fff;border:none;cursor:pointer;font-size:14px;display:none;align-items:center;justify-content:center}
+.photo-box.has-img .del-btn{display:flex}
+.btn{padding:12px 24px;border-radius:8px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);font-size:13px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .2s}
+.btn:hover{background:var(--sf2)}
+.btn-primary{background:var(--ac);color:#fff;border-color:var(--ac)}
+.btn-primary:hover{background:#7a5a35}
+.btn-lg{padding:16px 40px;font-size:15px}
+.btn-green{background:var(--gn);color:#fff;border-color:var(--gn)}
+.btn-green:hover{background:#2d6240}
+.action-bar{display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap}
+.esign-result{background:var(--gl);border:1px solid var(--gn);border-radius:var(--r);padding:18px;margin-top:16px;display:none}
+.esign-result .link-box{display:flex;gap:8px;margin-top:10px}
+.esign-result .link-box input{flex:1;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;font-size:13px;font-family:'DM Mono',monospace;background:#fff}
+.esign-status{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:18px;margin-top:16px}
+.esign-status table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+.esign-status th,.esign-status td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--bd)}
+.esign-status th{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.1em}
+.status-badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:500}
+.status-pending{background:#fff3cd;color:#856404}
+.status-signed{background:var(--gl);color:var(--gn)}
+#print-area{display:none}
+@media print{
+  body{background:#fff;font-size:12pt;font-family:'Noto Serif TC','Times New Roman',serif;color:#000;font-weight:400}
+  .header,.container,#app{display:none !important}
+  #print-area{display:block !important;padding:0}
+  @page{size:A4;margin:2cm 2.2cm}
+  .p-title{font-size:22pt;font-weight:700;text-align:center;margin-bottom:28pt;letter-spacing:.15em}
+  .p-section{margin-bottom:14pt;page-break-inside:avoid}
+  .p-section-title{font-size:13pt;font-weight:700;margin-bottom:6pt}
+  .p-item{margin-left:16pt;margin-bottom:3pt;line-height:1.8;text-indent:-12pt;padding-left:12pt}
+  .p-item::before{content:'• '}
+  .p-val{padding:0 2pt;font-weight:400}
+  .p-sign{margin-top:36pt;page-break-inside:avoid}
+  .p-sign-line{margin-bottom:14pt;line-height:2}
+  .p-covenant{page-break-before:always}
+  .p-covenant-title{font-size:18pt;font-weight:700;text-align:center;margin-bottom:24pt;letter-spacing:.15em}
+  .p-cov-section{margin-bottom:12pt;page-break-inside:avoid}
+  .p-cov-section-title{font-size:12pt;font-weight:700;margin-bottom:6pt;text-decoration:underline;text-underline-offset:4pt}
+  .p-cov-item{margin-left:16pt;margin-bottom:3pt;line-height:1.8;text-indent:-12pt;padding-left:12pt}
+  .p-cov-item::before{content:'• '}
+  .p-photos{page-break-before:always}
+  .p-photos h2{font-size:16pt;font-weight:700;text-align:center;margin-bottom:24pt}
+  .p-photo-row{display:flex;flex-direction:column;align-items:center;gap:20pt}
+  .p-photo-block{text-align:center}
+  .p-photo-label{font-size:12pt;font-weight:700;margin-bottom:8pt}
+  .p-photo-img{max-width:90%;max-height:280pt;border:1px solid #ccc;border-radius:4pt}
+}
+@media(max-width:600px){
+  .form-row,.form-row.tri{grid-template-columns:1fr}
+  .photo-zone{flex-direction:column;align-items:center}
+  .photo-box{width:100%;max-width:300px}
+  .header{padding:12px 16px}
+  .container{padding:16px 12px 60px}
+}
+</style>
+</head>
+<body>
+<!-- 密碼鎖 -->
+<div id="lockScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)">
+  <div style="background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:40px;text-align:center;box-shadow:var(--sh);max-width:360px;width:90%">
+    <div style="font-family:'Noto Serif TC',serif;font-size:22px;font-weight:300;letter-spacing:.08em;margin-bottom:8px">租約產生器</div>
+    <div style="font-size:10px;color:var(--al);font-family:'DM Mono',monospace;letter-spacing:.1em;margin-bottom:28px">LEASE GENERATOR v2.0</div>
+    <input type="password" id="lockPwd" placeholder="請輸入密碼" style="width:100%;padding:12px 16px;border:1px solid var(--bd);border-radius:8px;font-size:16px;text-align:center;font-family:inherit;outline:none;margin-bottom:12px" onkeydown="if(event.key==='Enter')unlock()">
+    <div><button class="btn btn-primary" style="width:100%;padding:14px;font-size:15px" onclick="unlock()">進入</button></div>
+    <div id="lockErr" style="color:var(--rd);font-size:12px;margin-top:10px;display:none">密碼錯誤</div>
+  </div>
+</div>
+<div id="app" style="display:none">
+<div class="header">
+  <div class="h-left"><div>
+    <div class="h-title">租約產生器</div>
+    <div class="h-sub">LEASE GENERATOR v2.0</div>
+  </div></div>
+  <div class="h-actions"><button class="btn" onclick="resetForm()">清空表單</button></div>
+</div>
+<div class="container">
+
+  <!-- 合約類型 -->
+  <div class="type-toggle">
+    <button class="type-btn" data-type="studio" onclick="switchType('studio')">套房租約</button>
+    <button class="type-btn active" data-type="shared" onclick="switchType('shared')">分租租約</button>
+  </div>
+
+  <!-- 甲方資料 -->
+  <div class="card">
+    <div class="card-title">甲方（出租人）資料</div>
+    <div class="form-row tri">
+      <div class="form-group">
+        <label>甲方姓名</label>
+        <input type="text" id="f_aName" value="張彤羚" readonly>
+      </div>
+      <div class="form-group">
+        <label>身分證字號</label>
+        <input type="text" id="f_aId" value="A227552220" readonly>
+      </div>
+      <div class="form-group">
+        <label>聯絡電話</label>
+        <input type="text" id="f_aPhone" value="0986892179" readonly>
+      </div>
+    </div>
+  </div>
+
+  <!-- 乙方資料 -->
+  <div class="card">
+    <div class="card-title">乙方（承租人）資料</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>乙方姓名</label>
+        <input type="text" id="f_bName" placeholder="承租人姓名">
+      </div>
+      <div class="form-group">
+        <label>身分證字號</label>
+        <input type="text" id="f_bId" placeholder="例：A123456789" maxlength="10">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>聯絡電話</label>
+        <input type="tel" id="f_bPhone" placeholder="例：0912345678">
+      </div>
+      <div class="form-group">
+        <label>戶籍地址</label>
+        <input type="text" id="f_bAddr" placeholder="戶籍地址">
+      </div>
+    </div>
+    <div class="form-row tri">
+      <div class="form-group">
+        <label>緊急聯絡人</label>
+        <input type="text" id="f_emerName" placeholder="姓名（選填）">
+      </div>
+      <div class="form-group">
+        <label>緊急聯絡人電話</label>
+        <input type="tel" id="f_emerPhone" placeholder="電話">
+      </div>
+      <div class="form-group">
+        <label>關係</label>
+        <input type="text" id="f_emerRel" placeholder="例：父母、配偶">
+      </div>
+    </div>
+  </div>
+
+  <!-- 租賃資訊 -->
+  <div class="card">
+    <div class="card-title">租賃資訊</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>租賃地址</label>
+        <input type="text" id="f_propAddr" placeholder="房屋完整地址">
+      </div>
+      <div class="form-group">
+        <label>房間（分租適用）</label>
+        <select id="f_room">
+          <option value="">不指定</option>
+          <option value="A房">A房</option>
+          <option value="B房">B房</option>
+          <option value="C房">C房</option>
+          <option value="D房">D房</option>
+          <option value="E房">E房</option>
+          <option value="F房">F房</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>租賃起始日（民國）</label>
+        <div class="date-wrap">
+          <input type="text" id="f_startDate" placeholder="例：115/04/01" onchange="autoEndDate()">
+          <button type="button" class="cal-btn" onclick="openCal('startCal')">&#x1F4C5;</button>
+          <input type="date" id="startCal" onchange="calToMinguo(this,'f_startDate');autoEndDate()">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>租賃結束日（民國）</label>
+        <div class="date-wrap">
+          <input type="text" id="f_endDate" placeholder="自動計算（可改）">
+          <button type="button" class="cal-btn" onclick="openCal('endCal')">&#x1F4C5;</button>
+          <input type="date" id="endCal" onchange="calToMinguo(this,'f_endDate')">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 租金與押金 -->
+  <div class="card">
+    <div class="card-title">租金與押金</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>每月租金（元）</label>
+        <input type="number" id="f_rent" placeholder="例：12000">
+      </div>
+      <div class="form-group">
+        <label>繳租日（每月幾號前）</label>
+        <input type="number" id="f_rentDay" placeholder="例：5" min="1" max="31">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>押金（元）</label>
+        <input type="number" id="f_deposit" placeholder="例：24000">
+      </div>
+    </div>
+    <!-- 匯款帳戶（固定） -->
+    <div style="border-top:1px solid var(--bd);margin:16px 0;padding-top:16px">
+      <div style="font-size:11px;color:var(--mu);font-weight:500;margin-bottom:12px">匯款帳戶（固定）</div>
+      <div class="form-row tri">
+        <div class="form-group">
+          <label>銀行名稱</label>
+          <input type="text" value="國泰世華永春分行" readonly>
+        </div>
+        <div class="form-group">
+          <label>銀行代碼</label>
+          <input type="text" value="013" readonly>
+        </div>
+        <div class="form-group">
+          <label>帳號</label>
+          <input type="text" value="078506190966" readonly>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 提前終止 -->
+  <div class="card">
+    <div class="card-title">提前終止條款</div>
+    <div class="radio-group">
+      <label><input type="radio" name="earlyTerminate" value="no" checked> 不得提前終止</label>
+      <label><input type="radio" name="earlyTerminate" value="yes"> 得提前終止（需提前一個月通知）</label>
+    </div>
+  </div>
+
+  <!-- 特約事項 -->
+  <div class="card">
+    <div class="card-title">特約事項</div>
+    <div class="form-row full">
+      <div class="form-group">
+        <label>特約事項 1（選填）</label>
+        <input type="text" id="f_special1" placeholder="如有特殊約定請填寫">
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group">
+        <label>特約事項 2（選填）</label>
+        <input type="text" id="f_special2" placeholder="如有特殊約定請填寫">
+      </div>
+    </div>
+  </div>
+
+  <!-- 簽約日期 -->
+  <div class="card">
+    <div class="card-title">簽約日期</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>簽約日期（民國）</label>
+        <div class="date-wrap">
+          <input type="text" id="f_signDate" placeholder="例：115/04/01">
+          <button type="button" class="cal-btn" onclick="openCal('signCal')">&#x1F4C5;</button>
+          <input type="date" id="signCal" onchange="calToMinguo(this,'f_signDate')">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 身分證上傳 -->
+  <div class="card">
+    <div class="card-title">承租人身分證</div>
+    <p style="font-size:11px;color:var(--mu);margin-bottom:14px">請上傳身分證正面與反面照片，將附於合約末頁。拍攝時請盡量只拍身分證本體。</p>
+    <div class="photo-zone">
+      <div class="photo-box" id="idFrontBox" onclick="document.getElementById('idFrontInput').click()">
+        <div class="label">身分證 正面</div>
+        <div class="placeholder" id="idFrontPlaceholder">&#x1F4F7;</div>
+        <div class="hint">點擊上傳照片</div>
+        <img id="idFrontImg" style="display:none" alt="身分證正面">
+        <input type="file" id="idFrontInput" accept="image/*" onchange="handlePhoto(this,'front')">
+        <button class="del-btn" onclick="delPhoto(event,'front')">&times;</button>
+      </div>
+      <div class="photo-box" id="idBackBox" onclick="document.getElementById('idBackInput').click()">
+        <div class="label">身分證 反面</div>
+        <div class="placeholder" id="idBackPlaceholder">&#x1F4F7;</div>
+        <div class="hint">點擊上傳照片</div>
+        <img id="idBackImg" style="display:none" alt="身分證反面">
+        <input type="file" id="idBackInput" accept="image/*" onchange="handlePhoto(this,'back')">
+        <button class="del-btn" onclick="delPhoto(event,'back')">&times;</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-bar">
+    <button class="btn btn-primary btn-lg" onclick="generatePDF()">儲存 PDF</button>
+    <button class="btn btn-green btn-lg" onclick="sendESign()">發送電子簽約</button>
+  </div>
+
+  <!-- 電子簽約結果 -->
+  <div class="esign-result" id="esignResult">
+    <div style="font-weight:600;color:var(--gn);margin-bottom:6px">電子簽約連結已產生</div>
+    <div style="font-size:12px;color:var(--mu);margin-bottom:8px">請複製連結發送給租客（LINE、簡訊等），連結 7 天內有效。</div>
+    <div class="link-box">
+      <input type="text" id="esignLink" readonly>
+      <button class="btn" onclick="copyLink()">複製</button>
+    </div>
+  </div>
+
+  <!-- 簽約狀態 -->
+  <div class="esign-status" id="esignStatus" style="display:none">
+    <div class="card-title">電子簽約狀態</div>
+    <div style="text-align:right;margin-bottom:8px"><button class="btn" onclick="loadContracts()" style="font-size:11px;padding:6px 14px">重新整理</button></div>
+    <table>
+      <thead><tr><th>租客</th><th>地址</th><th>狀態</th><th>建立時間</th><th>操作</th></tr></thead>
+      <tbody id="contractsBody"></tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<div id="print-area"></div>
+
+<script>
+/* === 密碼鎖 === */
+const LOCK_HASH = '0ef332778b21dff8648db320fa9fe790a5ed7508f53318233311876985c733a3'; // SHA-256 of '0913'
+async function hashPwd(pwd) {
+  const enc = new TextEncoder().encode(pwd);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function unlock() {
+  const pwd = document.getElementById('lockPwd').value;
+  const h = await hashPwd(pwd);
+  if (h === LOCK_HASH) {
+    sessionStorage.setItem('lease_auth','1');
+    document.getElementById('lockScreen').style.display='none';
+    document.getElementById('app').style.display='';
+  } else {
+    document.getElementById('lockErr').style.display='block';
+    document.getElementById('lockPwd').value='';
+    document.getElementById('lockPwd').focus();
+  }
+}
+// 自動登入（同一瀏覽器 session 不用重複輸入）
+if(sessionStorage.getItem('lease_auth')==='1'){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('app').style.display='';
+}
+
+const SUPABASE_URL = 'https://taulnnhvwxdbptvxfxza.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhdWxubmh2d3hkYnB0dnhmeHphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMDE2OTksImV4cCI6MjA4ODY3NzY5OX0.B0BJNKm-QcFezIl-e3WkyHdcuAWyB0XzFR_hIQ439o4';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// 簽名頁的正式網址（GitHub Pages）
+const SIGN_BASE = 'https://alexepoch.github.io/batongling/sign.html';
+
+let contractType = 'shared';
+let photos = { front: null, back: null };
+
+/* === 初始化 === */
+(function init() {
+  const now = new Date();
+  const rocY = now.getFullYear() - 1911;
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  const todayMinguo = rocY + '/' + m + '/' + d;
+  document.getElementById('f_startDate').value = todayMinguo;
+  document.getElementById('f_signDate').value = todayMinguo;
+  autoEndDate();
+})();
+
+/* === 民國日期解析 === */
+function parseMinguo(str) {
+  if (!str) return null;
+  const parts = str.replace(/[年月日]/g, '/').split('/').filter(Boolean);
+  if (parts.length < 3) return null;
+  return { y: parseInt(parts[0]), m: parseInt(parts[1]), d: parseInt(parts[2]) };
+}
+
+function minguoStr(y, m, d) {
+  return y + '/' + String(m).padStart(2, '0') + '/' + String(d).padStart(2, '0');
+}
+
+/* === 起始日變更 → 自動算結束日（+1年-1天） === */
+function autoEndDate() {
+  const p = parseMinguo(document.getElementById('f_startDate').value);
+  if (!p) return;
+  // +1年 -1天
+  const westY = p.y + 1911;
+  const start = new Date(westY, p.m - 1, p.d);
+  const end = new Date(start);
+  end.setFullYear(end.getFullYear() + 1);
+  end.setDate(end.getDate() - 1);
+  const endRocY = end.getFullYear() - 1911;
+  document.getElementById('f_endDate').value = minguoStr(endRocY, end.getMonth() + 1, end.getDate());
+}
+
+/* === 日曆選擇 === */
+function openCal(calId) {
+  const cal = document.getElementById(calId);
+  cal.showPicker ? cal.showPicker() : cal.click();
+}
+function calToMinguo(calInput, textId) {
+  const val = calInput.value;
+  if (!val) return;
+  const [y, m, d] = val.split('-');
+  document.getElementById(textId).value = (Number(y) - 1911) + '/' + m + '/' + d;
+}
+
+/* === 類型切換 === */
+function switchType(type) {
+  contractType = type;
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+}
+
+/* === 照片處理 === */
+function handlePhoto(input, side) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    photos[side] = e.target.result;
+    const img = document.getElementById(side === 'front' ? 'idFrontImg' : 'idBackImg');
+    const box = document.getElementById(side === 'front' ? 'idFrontBox' : 'idBackBox');
+    const ph = document.getElementById(side === 'front' ? 'idFrontPlaceholder' : 'idBackPlaceholder');
+    img.src = e.target.result; img.style.display = 'block';
+    ph.style.display = 'none'; box.querySelector('.hint').style.display = 'none';
+    box.classList.add('has-img');
+  };
+  reader.readAsDataURL(file);
+}
+function delPhoto(e, side) {
+  e.stopPropagation(); photos[side] = null;
+  const img = document.getElementById(side === 'front' ? 'idFrontImg' : 'idBackImg');
+  const box = document.getElementById(side === 'front' ? 'idFrontBox' : 'idBackBox');
+  const ph = document.getElementById(side === 'front' ? 'idFrontPlaceholder' : 'idBackPlaceholder');
+  const input = document.getElementById(side === 'front' ? 'idFrontInput' : 'idBackInput');
+  img.src = ''; img.style.display = 'none'; ph.style.display = 'block';
+  box.querySelector('.hint').style.display = 'block'; box.classList.remove('has-img'); input.value = '';
+}
+
+/* === 輔助函式 === */
+function v(id) { return document.getElementById(id).value.trim(); }
+function val(text) { return '<span class="p-val">' + (text || '\u3000\u3000\u3000\u3000') + '</span>'; }
+function numberFmt(n) { return n ? Number(n).toLocaleString('zh-TW') : ''; }
+
+function toMinguoObj(minguoStr) {
+  const p = parseMinguo(minguoStr);
+  if (!p) return { y:'', m:'', d:'' };
+  return { y: String(p.y), m: String(p.m).padStart(2,'0'), d: String(p.d).padStart(2,'0') };
+}
+
+function getEarlyTerminate() {
+  return document.querySelector('input[name="earlyTerminate"]:checked').value;
+}
+
+/* === 產生合約 HTML === */
+function buildContract() {
+  const d = {
+    aName: v('f_aName'), aId: v('f_aId'), aPhone: v('f_aPhone'),
+    bName: v('f_bName'), bId: v('f_bId'), bPhone: v('f_bPhone'), bAddr: v('f_bAddr'),
+    emerName: v('f_emerName'), emerPhone: v('f_emerPhone'), emerRel: v('f_emerRel'),
+    propAddr: v('f_propAddr') + (v('f_room') ? ' ' + v('f_room') : ''),
+    rent: v('f_rent'), rentDay: v('f_rentDay'), deposit: v('f_deposit'),
+    special1: v('f_special1'), special2: v('f_special2'),
+  };
+  const startD = toMinguoObj(v('f_startDate'));
+  const endD = toMinguoObj(v('f_endDate'));
+  const signD = toMinguoObj(v('f_signDate'));
+  const isStudio = contractType === 'studio';
+  const canTerminate = getEarlyTerminate() === 'yes';
+
+  const bankLine = `乙方應於每月 ${val(d.rentDay)} 日前匯入指定帳戶：國泰世華永春分行\u3000代碼：013<br>\u3000\u3000帳戶：078506190966`;
+
+  const sec8 = isStudio
+    ? '水費、電費、瓦斯費依據台灣自來水公司、台灣電力公司及天然氣業者之帳單，依乙方支付，社區管理費由甲方負擔。'
+    : '水費、電費、瓦斯費依據台灣自來水公司、台灣電力公司及天然氣業者之帳單，依現有居住人數平均均攤，網路及社區管理費由甲方負擔（如有）。';
+
+  let emerLine = '';
+  if (d.emerName) {
+    emerLine = `<div class="p-item">緊急聯絡人（乙方）：${val(d.emerName)}\u3000電話：${val(d.emerPhone)}\u3000（關係）：${val(d.emerRel)}</div>`;
+  }
+
+  // 提前終止條款
+  let terminateClause;
+  if (canTerminate) {
+    terminateClause = `<div class="p-item" style="text-indent:0;padding-left:16pt;font-weight:700">得提前終止租約，惟應於一個月前以書面或電子方式通知對方，届時無違約金，押金應全數退還。</div>`;
+  } else {
+    terminateClause = `<div class="p-item" style="text-indent:0;padding-left:16pt;font-weight:700">不得提前終止租約。如乙方違約提前退租，應支付相當於一個月租金之違約金，甲方得自押金中扣除。</div>`;
+  }
+
+  let specialLines = '';
+  if (d.special1) specialLines += `<div style="margin-left:16pt;margin-bottom:4pt;line-height:1.8">1. ${d.special1}</div>`;
+  if (d.special2) specialLines += `<div style="margin-left:16pt;margin-bottom:4pt;line-height:1.8">2. ${d.special2}</div>`;
+  if (!d.special1 && !d.special2) specialLines = '<div style="margin-left:16pt;color:#999;line-height:1.8">（無）</div>';
+
+  return `
+<div class="p-title">不動產租賃契約書</div>
+<div class="p-section">
+  <div class="p-section-title">一、雙方基本資料</div>
+  <div class="p-item">甲方（出租人）：${val(d.aName)}\u3000身分證字號：${val(d.aId)}</div>
+  <div class="p-item">甲方聯絡電話：${val(d.aPhone)}</div>
+  <div class="p-item">乙方（承租人）：${val(d.bName)}\u3000身分證字號：${val(d.bId)}</div>
+  <div class="p-item">聯絡方式（電話）：${val(d.bPhone)}</div>
+  <div class="p-item">戶籍地址：${val(d.bAddr)}</div>
+  ${emerLine}
+</div>
+<div class="p-section">
+  <div class="p-section-title">二、租賃所在地</div>
+  <div class="p-item">甲方同意將位於 ${val(d.propAddr)}（以下稱「本房屋」）出租予乙方作住宅用途使用，附家具及設備詳列於《附表一》。</div>
+</div>
+<div class="p-section">
+  <div class="p-section-title">三、租賃期間</div>
+  <div class="p-item">租賃期間自民國 ${val(startD.y)} 年 ${val(startD.m)} 月 ${val(startD.d)} 日起，至 ${val(endD.y)} 年 ${val(endD.m)} 月 ${val(endD.d)} 日止。</div>
+  <div class="p-item">本契約為定期租賃契約，租期屆滿即自動終止，雙方無續約義務。</div>
+  <div class="p-item">如任一方有續約意願，應於租期屆滿「前一個月內」以書面或電子方式通知對方，並另行簽訂新契約。</div>
+  <div class="p-item">未重新簽署者視為不續租，乙方應如期搬離並完成清潔與點交。</div>
+  ${terminateClause}
+</div>
+<div class="p-section">
+  <div class="p-section-title">四、租金與押金</div>
+  <div class="p-item">每月租金為新臺幣 ${val(numberFmt(d.rent))} 元整。</div>
+  <div class="p-item">${bankLine}</div>
+  <div class="p-item">押金新臺幣 ${val(numberFmt(d.deposit))} 元整（不得超過兩個月租金），於簽約時一次繳清。</div>
+  <div class="p-item">退租後三日內，甲方得於扣除必要費用後返還押金。</div>
+</div>
+<div class="p-section">
+  <div class="p-section-title">五、租金遲繳與違約處理</div>
+  <div class="p-item">乙方若逾期七日未繳租金，甲方得以書面或電子方式催告，限期三日內補繳。屆期仍未繳納者視同解約租約即期終止，得更換門鎖及停止供應水電，甲方得依法解除契約並請求返還房屋。</div>
+  <div class="p-item">若乙方有破壞、違約、違法使用等情形，甲方得提前終止契約。</div>
+  <div class="p-item">倘若乙方於契約期間內因任何因素（如自行退租、搬離、或其他原因）中止租約，乙方不得向甲方請求租金、押金、遷移費或其他任何名目要求返還，並應無條件將房屋回復原狀返還甲方。</div>
+  <div class="p-item">若乙方有違約事實，致損害甲方權益時，乙方應無條件返還房屋，並明確放棄任何先訴抗辯權。若甲方因此涉入訴訟程序，所生之一切相關費用，均應由乙方全額負擔賠償。</div>
+</div>
+<div class="p-section">
+  <div class="p-section-title">六、用途限制與禁止行為</div>
+  <div class="p-item">未經甲方書面同意，乙方不得轉租、分租、供他人居住或作非住宅用途。</div>
+  <div class="p-item">禁止作非法用途、妨礙社區安寧、儲放危險物品、群租或擅自改變房屋結構。</div>
+  <div class="p-item">如乙方欲進行裝潢、釘牆、貼雙面膠等黏貼於壁面或其他改動牆面、地面、天花板之行為，須事先取得甲方書面同意。</div>
+  <div class="p-item">為維護居住品質與其他住戶權益，本房屋禁止飼養寵物。若承租人有特殊需求，應事前提出申請，經出租人評估並同意後，始得飼養。未經同意擅自飼養者，出租人得要求限期改善或終止租約。</div>
+</div>
+<div class="p-section">
+  <div class="p-section-title">七、設備與維修責任</div>
+  <div class="p-item">設備明細詳列於《附表一》。</div>
+  <div class="p-item">非乙方過失之故障由甲方修繕；若為乙方過失，應自費修復或賠償。</div>
+  <div class="p-item">退租或解約應恢復原狀，如損壞、污損未清潔，甲方得自押金中扣除合理費用。</div>
+</div>
+<div class="p-section">
+  <div class="p-section-title">八、房屋費用說明</div>
+  <div class="p-item">${sec8}</div>
+</div>
+<div class="p-section">
+  <div class="p-section-title">九、押金條款</div>
+  <div class="p-item">押金僅作為履約擔保，不得抵繳租金。</div>
+  <div class="p-item">若房屋設備損壞、欠費或未清潔，甲方得自押金中扣除對應費用。</div>
+</div>
+<div class="p-section">
+  <div class="p-section-title">十、報稅事項</div>
+  <div class="p-item">本契約記載為真實租賃事實。甲方不申報租賃所得稅務。</div>
+  <div class="p-item">戶籍登記：未經出租人同意乙方禁止申請設立戶籍於租屋處。</div>
+  <div class="p-item">如甲方同意設籍，乙方應於租約期滿且未續租時，於一週內將戶籍遷出。此合約屬未報稅租賃關係。</div>
+</div>
+<div class="p-section">
+  <div class="p-section-title">十一、審閱說明</div>
+  <div class="p-item">本契約條款經甲乙雙方審閱確認，同意內容清楚明確，簽約前已充分理解其法律意義與義務，並無重大爭議或不公平條件。乙方聲明已獲充足時間審閱本契約。</div>
+</div>
+<div class="p-section">
+  <div class="p-section-title">十二、附則</div>
+  <div class="p-item">雙方於簽約當日完成現場點交，並得拍照存證，作為退租依據。</div>
+  <div class="p-item">所有通知（如催繳、續租意願、搬遷等）得以 LINE、Email、簡訊等電子方式傳送，並以寄出時間紀錄為準。</div>
+  <div class="p-item">本契約一式兩份，雙方簽章後生效，甲乙雙方各執一份。</div>
+</div>
+<div class="p-section">
+  <div class="p-section-title">十三、特約事項</div>
+  ${specialLines}
+</div>
+<div class="p-sign">
+  <div style="font-weight:700;margin-bottom:12pt">【簽章欄】</div>
+  <div class="p-sign-line">甲方（出租人）：${val(d.aName)}\u3000（簽章）</div>
+  <div class="p-sign-line">乙方（承租人）：${val(d.bName)}\u3000（簽章）</div>
+  <div class="p-sign-line">簽約日期：中華民國 ${val(signD.y)} 年 ${val(signD.m)} 月 ${val(signD.d)} 日</div>
+</div>`;
+}
+
+/* === 產生生活公約 === */
+function buildCovenant() {
+  const signD = toMinguoObj(v('f_signDate'));
+  const bName = v('f_bName');
+  const isStudio = contractType === 'studio';
+  let body;
+  if (isStudio) {
+    body = `
+<div class="p-cov-section"><div class="p-cov-section-title">一、公共空間使用原則</div>
+<div class="p-cov-item">垃圾請依社區分類方式處理，如社區內有垃圾場請依規定分類；如無，請室友協調輪流丟棄或自行處理。廚餘或其他容易腐敗發臭之物品，請務必密封綁好並於兩日內丟棄。</div>
+<div class="p-cov-item">個人物品請勿占用公共空間，應妥善放置於個人承租範圍內。</div></div>
+<div class="p-cov-section"><div class="p-cov-section-title">二、生活秩序與安全</div>
+<div class="p-cov-item">出入請關門上鎖，遺失鑰匙需支付重製費用（每組 300 元）。</div></div>
+<div class="p-cov-section"><div class="p-cov-section-title">三、設備使用與保養</div>
+<div class="p-cov-item">請妥善使用房內及共用電器設備，勿強行操作或私自修理。</div>
+<div class="p-cov-item">發現任何設備損壞或異常，請即刻通報房東。</div>
+<div class="p-cov-item">如需出門請隨手關閉屋內電器設備。</div></div>
+<div class="p-cov-section"><div class="p-cov-section-title">四、行為規範與禁止事項</div>
+<div class="p-cov-item">未經允許不得飼養寵物。</div>
+<div class="p-cov-item">水費、電費及瓦斯費用均依帳單實際金額由乙方支付，不得藉詞異議或拒絕繳納。</div>
+<div class="p-cov-item">室內全面禁菸，禁止進行違法行為或存放危險物品。</div></div>
+<div class="p-cov-section"><div class="p-cov-section-title">五、違約處理條款</div>
+<div style="line-height:1.8;margin-bottom:8pt">若承租人違反上述規範，經提醒後仍未改善，第二次違規房東有權終止租賃契約，並依合約內容處理後續相關事項。</div></div>`;
+  } else {
+    body = `
+<div class="p-cov-section"><div class="p-cov-section-title">一、公共空間使用原則</div>
+<div class="p-cov-item">共用區域（如廚房、衛浴、客廳）使用後請立即清潔，保持整潔。</div>
+<div class="p-cov-item">垃圾請依社區分類方式處理，如社區內有垃圾場請依規定分類；如無，請室友協調輪流丟棄或自行處理。廚餘或其他容易腐敗發臭之物品，請務必密封綁好並於兩日內丟棄。</div>
+<div class="p-cov-item">個人物品請勿占用公共空間，應妥善放置於個人承租範圍內。</div></div>
+<div class="p-cov-section"><div class="p-cov-section-title">二、生活秩序與安全</div>
+<div class="p-cov-item">訪客請於晚間 10 點前離開，禁止過夜。如有特殊需求，須事前獲得同意，亦不得提供房屋鑰匙予訪客。</div>
+<div class="p-cov-item">晚上 22:00 至隔日 08:00 為安靜時段，請降低音量，避免干擾他人作息。</div>
+<div class="p-cov-item">出入請關門上鎖，遺失鑰匙需支付重製費用（每組 300 元）。</div>
+<div class="p-cov-item">若有任何爭吵或衝突，請第一時間通知房東協助處理。</div></div>
+<div class="p-cov-section"><div class="p-cov-section-title">三、設備使用與保養</div>
+<div class="p-cov-item">請妥善使用房內及共用電器設備，勿強行操作或私自修理。</div>
+<div class="p-cov-item">發現任何設備損壞或異常，請即刻通報房東。</div>
+<div class="p-cov-item">如需出門請隨手關閉屋內電器設備。</div>
+<div class="p-cov-item">洗衣機、烘衣機等公共設備僅限每日 08:00 至 23:00 使用，請勿於深夜啟用，亦不得將衣物長時間遺留於設備內。</div>
+<div class="p-cov-item">使用設備後應立即清理並恢復原狀，供他人順利使用。</div></div>
+<div class="p-cov-section"><div class="p-cov-section-title">四、行為規範與禁止事項</div>
+<div class="p-cov-item">未經允許不得飼養寵物。</div>
+<div class="p-cov-item">訪客最多可留宿 2 日（每 30 日內為限），因水電費用等均需室友共同分攤，為保障他人權益，訪客不得逾期留宿，亦不得單獨留在住所內，須與房客同進同出。</div>
+<div class="p-cov-item">水費、電費及瓦斯費用均依帳單實際金額平均分攤，各方不得藉詞異議或拒絕繳納。</div>
+<div class="p-cov-item">室內全面禁菸，禁止進行違法行為或存放危險物品。</div>
+<div class="p-cov-item">深夜煮飯請盡量降低音量，以不影響室友為原則。</div></div>
+<div class="p-cov-section"><div class="p-cov-section-title">五、違約處理條款</div>
+<div style="line-height:1.8;margin-bottom:8pt">若承租人違反上述規範，經提醒後仍未改善，第二次違規房東有權終止租賃契約，並依合約內容處理後續相關事項。</div></div>`;
+  }
+  return `<div class="p-covenant"><div class="p-covenant-title">生活公約</div>${body}
+<div style="border-top:1px solid #000;margin-top:36pt;padding-top:20pt">
+<div style="font-weight:700;margin-bottom:16pt;line-height:2">承租人簽名：${val(bName)}</div>
+<div style="font-weight:700;line-height:2">簽署日期：中華民國 ${val(signD.y)} 年 ${val(signD.m)} 月 ${val(signD.d)} 日</div>
+</div></div>`;
+}
+
+/* === 身分證頁 === */
+function buildPhotos() {
+  if (!photos.front && !photos.back) return '';
+  let h = '<div class="p-photos"><h2>承租人身分證影本</h2><div class="p-photo-row">';
+  if (photos.front) h += '<div class="p-photo-block"><div class="p-photo-label">正面</div><img class="p-photo-img" src="'+photos.front+'" alt="正面"></div>';
+  if (photos.back) h += '<div class="p-photo-block"><div class="p-photo-label">反面</div><img class="p-photo-img" src="'+photos.back+'" alt="反面"></div>';
+  return h + '</div></div>';
+}
+
+/* === 驗證 === */
+function validate() {
+  const req = [
+    ['f_bName','乙方姓名'],['f_bId','乙方身分證字號'],['f_bPhone','聯絡電話'],
+    ['f_propAddr','租賃地址'],['f_startDate','租賃起始日'],['f_endDate','租賃結束日'],
+    ['f_rent','每月租金'],['f_rentDay','繳租日'],['f_deposit','押金'],['f_signDate','簽約日期'],
+  ];
+  for (const [id, label] of req) {
+    if (!v(id)) { alert('請填寫：'+label); document.getElementById(id).focus(); return false; }
+  }
+  return true;
+}
+
+/* === 儲存 PDF（透過列印對話框 → 另存為 PDF） === */
+function generatePDF() {
+  if (!validate()) return;
+  const pa = document.getElementById('print-area');
+  pa.innerHTML = buildContract() + buildCovenant() + buildPhotos();
+  const imgs = pa.querySelectorAll('img');
+  Promise.all(Array.from(imgs).map(i => i.complete ? Promise.resolve() : new Promise(r => { i.onload=r; i.onerror=r; })))
+    .then(() => setTimeout(() => window.print(), 300));
+}
+
+/* === 電子簽約：上傳合約到 Supabase === */
+async function sendESign() {
+  if (!validate()) return;
+  const btn = event.target; btn.disabled = true; btn.textContent = '上傳中...';
+  try {
+    // 只上傳合約文字和生活公約，不含身分證照片
+    const html = buildContract() + buildCovenant();
+    const { data, error } = await sb.from('contracts').insert({
+      contract_html: html,
+      contract_type: contractType === 'studio' ? '套房' : '分租',
+      tenant_name: v('f_bName'),
+      property_addr: v('f_propAddr') + (v('f_room') ? ' ' + v('f_room') : ''),
+    }).select().single();
+    if (error) throw error;
+    const signUrl = SIGN_BASE + '?id=' + data.id;
+    document.getElementById('esignLink').value = signUrl;
+    document.getElementById('esignResult').style.display = 'block';
+    document.getElementById('esignStatus').style.display = 'block';
+    loadContracts();
+    alert('電子簽約連結已產生！請複製連結發送給租客。\n\n注意：身分證照片不會上傳，只存在您的電腦中。');
+  } catch (e) {
+    alert('上傳失敗：' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '發送電子簽約';
+  }
+}
+
+/* === 複製連結 === */
+function copyLink() {
+  const input = document.getElementById('esignLink');
+  input.select();
+  navigator.clipboard.writeText(input.value).then(() => {
+    const btn = event.target; btn.textContent = '已複製！';
+    setTimeout(() => btn.textContent = '複製', 1500);
+  });
+}
+
+/* === 載入簽約狀態 === */
+async function loadContracts() {
+  const { data, error } = await sb.from('contracts')
+    .select('id,tenant_name,property_addr,status,created_at,signed_at')
+    .order('created_at', { ascending: false })
+    .limit(20);
+  if (error) { console.error(error); return; }
+  const tbody = document.getElementById('contractsBody');
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--mu)">尚無電子簽約紀錄</td></tr>'; return; }
+  tbody.innerHTML = data.map(c => {
+    const isSigned = c.status === 'signed';
+    const badge = isSigned
+      ? '<span class="status-badge status-signed">已簽名</span>'
+      : '<span class="status-badge status-pending">待簽名</span>';
+    const date = new Date(c.created_at).toLocaleDateString('zh-TW');
+    const action = isSigned
+      ? `<button class="btn" style="font-size:11px;padding:4px 12px" onclick="viewSigned('${c.id}')">下載 PDF</button>`
+      : `<span style="font-size:11px;color:var(--mu)">等待中</span>`;
+    return `<tr><td>${c.tenant_name||'-'}</td><td>${c.property_addr||'-'}</td><td>${badge}</td><td>${date}</td><td>${action}</td></tr>`;
+  }).join('');
+  document.getElementById('esignStatus').style.display = 'block';
+}
+
+/* === 檢視已簽名合約並下載 PDF === */
+async function viewSigned(id) {
+  const { data, error } = await sb.from('contracts').select('*').eq('id', id).single();
+  if (error || !data) { alert('無法載入合約'); return; }
+  const signedAt = data.signed_at ? new Date(data.signed_at).toLocaleDateString('zh-TW') : '';
+  let signatureHtml = '';
+  if (data.signature_data) {
+    signatureHtml = `
+<div style="page-break-before:always">
+  <div style="font-size:16pt;font-weight:700;text-align:center;margin-bottom:24pt">電子簽名紀錄</div>
+  <div style="margin-bottom:16pt;line-height:2">
+    <div><strong>承租人：</strong>${data.tenant_name || ''}</div>
+    <div><strong>租賃地址：</strong>${data.property_addr || ''}</div>
+    <div><strong>簽名時間：</strong>${signedAt}</div>
+    <div><strong>合約類型：</strong>${data.contract_type || ''}</div>
+  </div>
+  <div style="margin-top:24pt">
+    <div style="font-weight:700;margin-bottom:8pt">承租人手寫簽名：</div>
+    <img src="${data.signature_data}" style="max-width:300pt;border:1px solid #ccc;border-radius:4pt" alt="簽名">
+  </div>
+</div>`;
+  }
+  const pa = document.getElementById('print-area');
+  pa.innerHTML = data.contract_html + signatureHtml;
+  const imgs = pa.querySelectorAll('img');
+  await Promise.all(Array.from(imgs).map(i => i.complete ? Promise.resolve() : new Promise(r => { i.onload=r; i.onerror=r; })));
+  setTimeout(() => window.print(), 300);
+}
+
+// 頁面載入時檢查是否有簽約紀錄
+sb.from('contracts').select('id').limit(1).then(({data})=>{ if(data&&data.length) loadContracts(); });
+
+/* === 清空 === */
+function resetForm() {
+  if (!confirm('確定要清空所有欄位嗎？')) return;
+  document.querySelectorAll('#app input:not([readonly])').forEach(i => i.value = '');
+  document.getElementById('f_propAddr').value = '';
+  document.getElementById('f_room').selectedIndex = 0;
+  document.querySelector('input[name="earlyTerminate"][value="no"]').checked = true;
+  delPhoto(new Event('click'), 'front');
+  delPhoto(new Event('click'), 'back');
+  const now = new Date();
+  const todayM = (now.getFullYear()-1911)+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+String(now.getDate()).padStart(2,'0');
+  document.getElementById('f_startDate').value = todayM;
+  document.getElementById('f_signDate').value = todayM;
+  autoEndDate();
+}
+</script>
+</body>
+</html>
