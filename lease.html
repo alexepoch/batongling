@@ -315,15 +315,12 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--tx);
   <!-- 甲方簽名 -->
   <div class="card">
     <div class="card-title">甲方簽名</div>
-    <div id="landlordSigSaved" style="display:none;margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:12px">
-        <img id="landlordSigPreview" style="max-width:200px;max-height:60px;border:1px solid var(--bd);border-radius:6px;background:#fff" alt="甲方簽名">
-        <span style="font-size:12px;color:var(--gn);font-weight:500">已儲存</span>
-        <button class="btn" style="font-size:11px;padding:4px 12px" onclick="clearLandlordSig()">重新簽</button>
+    <div id="landlordSigList" style="margin-bottom:12px"></div>
+    <div id="landlordSigPad" style="text-align:center;border-top:1px solid var(--bd);padding-top:14px">
+      <p style="font-size:11px;color:var(--mu);margin-bottom:6px">新增簽名（存到雲端，所有人共用）</p>
+      <div class="form-row" style="max-width:300px;margin:0 auto 10px">
+        <div class="form-group"><label>簽名者姓名</label><input type="text" id="sigOwnerName" placeholder="例：張彤羚"></div>
       </div>
-    </div>
-    <div id="landlordSigPad" style="text-align:center">
-      <p style="font-size:11px;color:var(--mu);margin-bottom:10px">簽一次就好，之後每份合約自動帶入。簽名會存在你的瀏覽器中。</p>
       <div style="display:inline-block;border:2px solid var(--bd);border-radius:8px;background:#fff">
         <canvas id="landlordCanvas" width="300" height="120" style="display:block;border-radius:6px;touch-action:none;cursor:crosshair"></canvas>
       </div>
@@ -422,7 +419,7 @@ const SIGN_BASE = 'https://alexepoch.github.io/batongling/sign.html';
 
 let contractType = 'shared';
 let photos = { front: null, back: null };
-let landlordSig = localStorage.getItem('landlord_sig') || null;
+let landlordSig = null; // 從 Supabase 載入
 
 /* === 初始化 === */
 (function init() {
@@ -777,6 +774,7 @@ function copyLink() {
 async function loadContracts() {
   const { data, error } = await sb.from('contracts')
     .select('id,tenant_name,property_addr,status,created_at,signed_at')
+    .neq('contract_type', 'config')
     .order('created_at', { ascending: false })
     .limit(20);
   if (error) { console.error(error); return; }
@@ -865,8 +863,8 @@ async function delContract(id, name) {
 // 頁面載入時檢查是否有簽約紀錄
 sb.from('contracts').select('id').limit(1).then(({data})=>{ if(data&&data.length) loadContracts(); });
 
-/* === 甲方簽名板 === */
-(function initLandlordSig() {
+/* === 甲方簽名板（多簽名、雲端共用） === */
+(function initLandlordCanvas() {
   const canvas = document.getElementById('landlordCanvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -884,36 +882,53 @@ sb.from('contracts').select('id').limit(1).then(({data})=>{ if(data&&data.length
   canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }, { passive: false });
   canvas.addEventListener('touchmove', e => { if (!drawing) return; e.preventDefault(); const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }, { passive: false });
   canvas.addEventListener('touchend', () => drawing = false);
-  // 如果已有儲存的簽名，直接顯示
-  if (landlordSig) {
-    document.getElementById('landlordSigPad').style.display = 'none';
-    document.getElementById('landlordSigSaved').style.display = 'block';
-    document.getElementById('landlordSigPreview').src = landlordSig;
-  }
+  loadLandlordSigs();
 })();
 
 function clearLandlordCanvas() {
   const canvas = document.getElementById('landlordCanvas');
   canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 }
-function saveLandlordSig() {
+
+async function loadLandlordSigs() {
+  const { data } = await sb.from('contracts').select('id,tenant_name,signature_data').eq('contract_type','config').order('created_at');
+  const list = document.getElementById('landlordSigList');
+  if (!data || !data.length) { list.innerHTML = '<p style="font-size:12px;color:var(--mu)">尚未儲存簽名，請在下方新增。</p>'; landlordSig = null; return; }
+  list.innerHTML = data.map((s, i) => {
+    const checked = (landlordSig === s.signature_data || (!landlordSig && i === 0)) ? 'checked' : '';
+    if (checked) landlordSig = s.signature_data;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)">
+      <input type="radio" name="landlordSigChoice" value="${s.id}" ${checked} onchange="selectLandlordSig('${s.id}')" style="accent-color:var(--ac);width:16px;height:16px">
+      <img src="${s.signature_data}" style="max-width:160px;max-height:50px;border:1px solid var(--bd);border-radius:4px;background:#fff" alt="簽名">
+      <span style="font-size:13px;font-weight:500;min-width:60px">${s.tenant_name || '未命名'}</span>
+      <button class="btn" style="font-size:10px;padding:3px 10px;color:var(--rd);border-color:var(--rd);margin-left:auto" onclick="delLandlordSig('${s.id}','${(s.tenant_name||'').replace(/'/g,'&#39;')}')">刪除</button>
+    </div>`;
+  }).join('');
+}
+
+async function selectLandlordSig(id) {
+  const { data } = await sb.from('contracts').select('signature_data').eq('id', id).single();
+  if (data) landlordSig = data.signature_data;
+}
+
+async function saveLandlordSig() {
   const canvas = document.getElementById('landlordCanvas');
-  const data = canvas.toDataURL('image/png');
-  // 檢查是否有畫東西（比較空白canvas）
+  const imgData = canvas.toDataURL('image/png');
   const blank = document.createElement('canvas'); blank.width = canvas.width; blank.height = canvas.height;
   if (canvas.toDataURL() === blank.toDataURL()) { alert('請先在上方簽名'); return; }
-  landlordSig = data;
-  localStorage.setItem('landlord_sig', data);
-  document.getElementById('landlordSigPad').style.display = 'none';
-  document.getElementById('landlordSigSaved').style.display = 'block';
-  document.getElementById('landlordSigPreview').src = data;
-}
-function clearLandlordSig() {
-  landlordSig = null;
-  localStorage.removeItem('landlord_sig');
-  document.getElementById('landlordSigSaved').style.display = 'none';
-  document.getElementById('landlordSigPad').style.display = 'block';
+  const ownerName = document.getElementById('sigOwnerName').value.trim();
+  if (!ownerName) { alert('請輸入簽名者姓名'); document.getElementById('sigOwnerName').focus(); return; }
+  await sb.from('contracts').insert({ contract_type:'config', tenant_name: ownerName, contract_html:'', signature_data: imgData });
+  landlordSig = imgData;
   clearLandlordCanvas();
+  document.getElementById('sigOwnerName').value = '';
+  loadLandlordSigs();
+}
+
+async function delLandlordSig(id, name) {
+  if (!confirm('確定要刪除「' + (name||'此簽名') + '」的簽名嗎？')) return;
+  await sb.from('contracts').delete().eq('id', id);
+  loadLandlordSigs();
 }
 
 /* === 清空 === */
