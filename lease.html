@@ -797,6 +797,24 @@ async function viewSigned(id) {
       }
     });
   }
+  // 3. 最後一頁：電子簽名紀錄（多一份保障）
+  if (data.signature_data) {
+    const signedAt = data.signed_at ? new Date(data.signed_at).toLocaleString('zh-TW') : '';
+    pa.innerHTML += `
+<div style="page-break-before:always">
+  <div style="font-size:16pt;font-weight:700;text-align:center;margin-bottom:24pt">電子簽名紀錄</div>
+  <div style="margin-bottom:16pt;line-height:2">
+    <div><strong>承租人：</strong>${data.tenant_name || ''}</div>
+    <div><strong>租賃地址：</strong>${data.property_addr || ''}</div>
+    <div><strong>合約類型：</strong>${data.contract_type || ''}</div>
+    <div><strong>簽名時間：</strong>${signedAt}</div>
+  </div>
+  <div style="margin-top:24pt">
+    <div style="font-weight:700;margin-bottom:8pt">承租人手寫簽名：</div>
+    <img src="${data.signature_data}" style="max-width:300pt;border:1px solid #ccc;border-radius:4pt" alt="簽名">
+  </div>
+</div>`;
+  }
   const imgs = pa.querySelectorAll('img');
   await Promise.all(Array.from(imgs).map(i => i.complete ? Promise.resolve() : new Promise(r => { i.onload=r; i.onerror=r; })));
   setTimeout(() => window.print(), 300);
